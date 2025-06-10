@@ -8,18 +8,37 @@
     "dev": "remix vite:dev",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > app/shared/types/database.ts",
+    "docs:dev": "echo 'Documentation available in /docs folder'",
+    "format": "prettier --write ."
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
     "@remix-run/node": "^2.16.8",
     "@remix-run/react": "^2.16.8",
     "@remix-run/serve": "^2.16.8",
+    "@supabase/auth-helpers-remix": "^0.4.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/uuid": "^10.0.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "isbot": "^4.1.0",
+    "openai": "^5.3.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.5.2",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.57"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.16.8",
+    "@types/node": "^24.0.0",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
@@ -34,8 +53,8 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.1.6",
-    "vite": "^6.0.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "vite": "^6.3.5",
+    "vite-tsconfig-paths": "^4.3.2"
   },
   "engines": {
     "node": ">=20.0.0"

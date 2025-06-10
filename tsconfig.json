@@ -5,25 +5,42 @@
     "**/.server/**/*.ts",
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",
-    "**/.client/**/*.tsx"
+    "**/.client/**/*.tsx",
+    "remix.env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".server/**/*.ts",
+    ".server/**/*.tsx"
   ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["@remix-run/node", "vite/client"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "target": "ES2022",
     "strict": true,
     "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "@/*": ["./app/*"],
+      "@/shared/*": ["./app/shared/*"],
+      "@/modules/*": ["./app/modules/*"],
+      "@/auth": ["./app/modules/auth"],
+      "@/campaigns": ["./app/modules/campaigns"],
+      "@/sessions": ["./app/modules/sessions"],
+      "@/locations": ["./app/modules/locations"],
+      "@/npcs": ["./app/modules/npcs"],
+      "@/inventory": ["./app/modules/inventory"],
+      "@/quests": ["./app/modules/quests"],
+      "@/bestiary": ["./app/modules/bestiary"],
+      "@/ai": ["./app/modules/ai"]
     },
 
     // Vite takes care of building everything, not tsc.
