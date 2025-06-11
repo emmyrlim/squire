@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, useActionData } from "@remix-run/react";
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { createSupabaseServerClient } from "@/shared/lib/supabase.server";
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -18,7 +18,7 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (error) {
-      return json({ type: "error", error: error.message } as const, {
+      return Response.json({ type: "error", error: error.message } as const, {
         status: 400,
       });
     }
@@ -29,15 +29,20 @@ export async function action({ request }: ActionFunctionArgs) {
     });
 
     if (error) {
-      return json({ type: "error", error: error.message } as const, {
+      return Response.json({ type: "error", error: error.message } as const, {
         status: 400,
       });
     }
 
-    return json({
-      type: "success",
-      message: "Check your email for confirmation link",
-    } as const);
+    return new Response(
+      JSON.stringify({
+        type: "success",
+        message: "Check your email for confirmation link",
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 
   return redirect("/campaigns");

@@ -1,6 +1,5 @@
 import { useLoaderData, Link } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -16,7 +15,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response("Failed to load campaigns", { status: 500 });
   }
 
-  return json({ campaigns });
+  return Response.json({ campaigns });
 }
 
 export default function CampaignIndex() {
