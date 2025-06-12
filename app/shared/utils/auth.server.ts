@@ -1,22 +1,28 @@
 import { redirect } from "@remix-run/node";
-import { createSupabaseServerClient } from "@/shared/lib/supabase.server";
+import { createClient } from "@/shared/lib/supabase.server";
 
 export async function requireAuth(request: Request) {
-  const { supabase } = createSupabaseServerClient(request);
+  const { supabase } = createClient(request);
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session) {
+  // Check if user is authenticated
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user || !session) {
     throw redirect("/login");
   }
 
-  return { session, supabase };
+  return { session, supabase, user };
 }
 
 export async function getOptionalAuth(request: Request) {
-  const { supabase } = createSupabaseServerClient(request);
+  const supabase = createClient(request);
 
   const {
     data: { session },

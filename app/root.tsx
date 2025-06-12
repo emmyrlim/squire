@@ -4,12 +4,8 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
 } from "@remix-run/react";
-import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
-import { createBrowserClient } from "@supabase/auth-helpers-remix";
-import { useState } from "react";
+import type { LinksFunction } from "@remix-run/node";
 import { Toaster } from "react-hot-toast";
 
 import "./tailwind.css";
@@ -37,17 +33,7 @@ export const links: LinksFunction = () => [
   },
 ];
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL!,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
-  };
-
-  return { env };
-}
-
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { env } = useLoaderData<typeof loader>();
   return (
     <html lang="en">
       <head>
@@ -60,11 +46,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
         <Toaster position="top-right" />
         <ScrollRestoration />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.ENV = ${JSON.stringify(env)}`,
-          }}
-        />
         <Scripts />
       </body>
     </html>
@@ -72,10 +53,5 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { env } = useLoaderData<typeof loader>();
-
-  const [supabase] = useState(() =>
-    createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
-  );
-  return <Outlet context={{ supabase }} />;
+  return <Outlet />;
 }

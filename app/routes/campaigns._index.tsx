@@ -1,92 +1,189 @@
-import { useLoaderData, Link } from "@remix-run/react";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData, useActionData, redirect } from "@remix-run/react";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
+import { CampaignList } from "~/modules/campaigns/components/CampaignList";
+import { useEffect } from "react";
+import { toast } from "react-hot-toast";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { supabase } = await requireAuth(request);
+  const { supabase, user } = await requireAuth(request);
 
-  const { data: campaigns, error } = await supabase.from("campaigns").select(`
-      *,
-      campaign_users!inner(role),
-      sessions(id)
-    `);
+  // Get user profile
+  const { data: profile, error: profileError } = await supabase.rpc(
+    "get_current_user_profile"
+  );
 
-  if (error) {
-    throw new Response("Failed to load campaigns", { status: 500 });
+  if (!profile || profileError) {
+    throw redirect("/login?error=profile_not_found");
   }
 
-  return Response.json({ campaigns });
+  // Get campaigns using RPC function
+  const { data: campaignsData, error: campaignsError } = await supabase.rpc(
+    "get_user_campaigns_with_details"
+    // Note: No second parameter needed since the function uses auth.uid()
+  );
+
+  if (campaignsError) {
+    console.error("Error fetching campaigns:", campaignsError);
+    return Response.json({
+      campaigns: [],
+      user,
+      profile: profile[0], // RPC returns array
+      error: "Failed to load campaigns",
+    });
+  }
+
+  // The RPC function returns JSON, so we need to parse it
+  // (or it might already be parsed by Supabase client)
+  const campaigns = campaignsData || [];
+
+  console.log("Campaigns loaded:", campaigns); // Debug log
+
+  return Response.json({
+    campaigns,
+    user,
+    profile: profile[0], // RPC returns array, take first item
+    error: null,
+  });
+}
+
+// Alternative: If you want to handle the response differently
+export async function loaderAlternative({ request }: LoaderFunctionArgs) {
+  const { supabase, user } = await requireAuth(request);
+
+  try {
+    // Get both profile and campaigns
+    const [profileResponse, campaignsResponse] = await Promise.all([
+      supabase.rpc("get_current_user_profile"),
+      supabase.rpc("get_user_campaigns_with_details"),
+    ]);
+
+    if (profileResponse.error) {
+      throw new Error(`Profile error: ${profileResponse.error.message}`);
+    }
+
+    if (campaignsResponse.error) {
+      throw new Error(`Campaigns error: ${campaignsResponse.error.message}`);
+    }
+
+    const profile = profileResponse.data?.[0];
+    const campaigns = campaignsResponse.data || [];
+
+    return Response.json({
+      campaigns,
+      user,
+      profile,
+      error: null,
+    });
+  } catch (error) {
+    console.error("Loader error:", error);
+
+    return Response.json({
+      campaigns: [],
+      user,
+      profile: null,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+
+// Action: Create a new campaign
+export async function action({ request }: ActionFunctionArgs) {
+  const { supabase, user } = await requireAuth(request);
+
+  const formData = await request.formData();
+  const intent = String(formData.get("intent"));
+
+  // Get user profile (id matches auth.users.id directly)
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("id, display_name, avatar_url")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
+    return Response.json(
+      { error: "User profile not found", success: null },
+      { status: 400 }
+    );
+  }
+
+  if (intent === "create") {
+    const name = String(formData.get("name")).trim();
+    const description = String(formData.get("description")).trim();
+
+    // Validation
+    if (!name) {
+      return Response.json(
+        { error: "Campaign name is required", success: null },
+        { status: 400 }
+      );
+    }
+
+    if (name.length > 100) {
+      return Response.json(
+        {
+          error: "Campaign name must be less than 100 characters",
+          success: null,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create the campaign
+    const { data: newCampaign, error: createError } = await supabase.rpc(
+      "create_campaign_with_dm",
+      {
+        campaign_name: name,
+        campaign_description: description || null,
+      }
+    );
+
+    if (createError) {
+      console.error("Error creating campaign:", createError);
+      return Response.json(
+        {
+          error: "Failed to create campaign. Please try again.",
+          success: null,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (createError) {
+      console.error("Error creating campaign:", createError);
+      return Response.json(
+        {
+          error: "Failed to create campaign. Please try again.",
+          success: null,
+        },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({
+      success: "Campaign created successfully!",
+      error: null,
+      campaign: newCampaign,
+    });
+  }
+
+  return Response.json(
+    { error: "Invalid action", success: null },
+    { status: 400 }
+  );
 }
 
 export default function CampaignIndex() {
   const { campaigns } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900 font-fantasy">
-            Your Campaigns
-          </h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Select a campaign to continue your adventure
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <Link
-            to="/campaigns/new"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
-          >
-            Create Campaign
-          </Link>
-        </div>
-      </div>
+  // Show success toast when campaign is created
+  useEffect(() => {
+    if (actionData?.success) {
+      toast.success(actionData.success);
+    }
+  }, [actionData]);
 
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {campaigns.map((campaign) => (
-          <Link
-            key={campaign.id}
-            to={`/campaigns/${campaign.id}`}
-            className="block bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
-          >
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {campaign.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {campaign.description}
-                  </p>
-                  <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
-                    <span>Sessions: {campaign.sessions?.length || 0}</span>
-                    <span>Role: {campaign.campaign_users[0]?.role}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {campaigns.length === 0 && (
-        <div className="text-center py-12">
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
-            No campaigns
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Get started by creating your first campaign.
-          </p>
-          <div className="mt-6">
-            <Link
-              to="/campaigns/new"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
-            >
-              Create Campaign
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <CampaignList campaigns={campaigns} />;
 }
