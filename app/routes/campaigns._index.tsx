@@ -5,50 +5,8 @@ import { CampaignList } from "~/modules/campaigns/components/CampaignList";
 import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const { supabase, user } = await requireAuth(request);
-
-  // Get user profile
-  const { data: profile, error: profileError } = await supabase.rpc(
-    "get_current_user_profile"
-  );
-
-  if (!profile || profileError) {
-    throw redirect("/login?error=profile_not_found");
-  }
-
-  // Get campaigns using RPC function
-  const { data: campaignsData, error: campaignsError } = await supabase.rpc(
-    "get_user_campaigns_with_details"
-    // Note: No second parameter needed since the function uses auth.uid()
-  );
-
-  if (campaignsError) {
-    console.error("Error fetching campaigns:", campaignsError);
-    return Response.json({
-      campaigns: [],
-      user,
-      profile: profile[0], // RPC returns array
-      error: "Failed to load campaigns",
-    });
-  }
-
-  // The RPC function returns JSON, so we need to parse it
-  // (or it might already be parsed by Supabase client)
-  const campaigns = campaignsData || [];
-
-  console.log("Campaigns loaded:", campaigns); // Debug log
-
-  return Response.json({
-    campaigns,
-    user,
-    profile: profile[0], // RPC returns array, take first item
-    error: null,
-  });
-}
-
 // Alternative: If you want to handle the response differently
-export async function loaderAlternative({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const { supabase, user } = await requireAuth(request);
 
   try {
