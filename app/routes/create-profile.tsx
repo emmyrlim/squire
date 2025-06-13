@@ -14,7 +14,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .single();
 
   if (profile) {
-    return redirect("/campaigns");
+    return redirect("/dashboard");
   }
 
   return null;
@@ -48,7 +48,7 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   }
 
-  return redirect("/campaigns");
+  return redirect("/dashboard");
 }
 
 export default function CreateProfile() {

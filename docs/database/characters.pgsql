@@ -201,3 +201,56 @@ WHERE cc.is_active = true AND c.is_active = true;
 
 -- STEP 11: Remove username from user_profiles (ONLY after updating all dependencies)
 -- ALTER TABLE user_profiles DROP COLUMN username; -- Uncomment ONLY after migration is complete
+
+
+-- First create the function
+CREATE OR REPLACE FUNCTION create_character(
+  character_name VARCHAR,
+  character_description TEXT,
+  character_class VARCHAR,
+  character_level INTEGER,
+  character_race VARCHAR,
+  character_background VARCHAR
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  new_character_id UUID;
+BEGIN
+  -- Insert the new character
+  INSERT INTO characters (
+    user_id,
+    name,
+    description,
+    class,
+    level,
+    race,
+    background,
+    is_active
+  ) VALUES (
+    auth.uid(),
+    character_name,
+    character_description,
+    character_class,
+    character_level,
+    character_race,
+    character_background,
+    true
+  )
+  RETURNING id INTO new_character_id;
+
+  RETURN new_character_id;
+END;
+$$;
+
+-- Then grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION create_character(
+  VARCHAR,
+  TEXT,
+  VARCHAR,
+  INTEGER,
+  VARCHAR,
+  VARCHAR
+) TO authenticated;

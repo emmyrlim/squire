@@ -153,3 +153,62 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_is_active ON campaigns(is_active);
 CREATE INDEX IF NOT EXISTS idx_campaign_users_user_id ON campaign_users(user_id);
 CREATE INDEX IF NOT EXISTS idx_campaign_users_campaign_id ON campaign_users(campaign_id);
 CREATE INDEX IF NOT EXISTS idx_campaign_users_role ON campaign_users(role);
+
+
+CREATE OR REPLACE FUNCTION public.create_campaign_with_dm(
+    campaign_name VARCHAR,
+    campaign_description TEXT DEFAULT NULL,
+    campaign_setting VARCHAR DEFAULT NULL
+)
+RETURNS TABLE (
+    id UUID,
+    name VARCHAR,
+    description TEXT,
+    setting VARCHAR,
+    created_by UUID,
+    invite_code VARCHAR,
+    is_active BOOLEAN,
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    new_campaign_id UUID;
+    campaign_record RECORD;
+BEGIN
+    -- Check authentication
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+
+    -- Create the campaign
+    INSERT INTO campaigns (name, description, setting, created_by)
+    VALUES (campaign_name, campaign_description, campaign_setting, auth.uid())
+    RETURNING * INTO campaign_record;
+
+    new_campaign_id := campaign_record.id;
+
+    -- Add creator as DM in campaign_users
+    INSERT INTO campaign_users (campaign_id, user_id, role)
+    VALUES (new_campaign_id, auth.uid(), 'dm');
+
+    -- Return the campaign
+    RETURN QUERY
+    SELECT
+        campaign_record.id,
+        campaign_record.name,
+        campaign_record.description,
+        campaign_record.setting,
+        campaign_record.created_by,
+        campaign_record.invite_code,
+        campaign_record.is_active,
+        campaign_record.created_at,
+        campaign_record.updated_at;
+END;
+$$;
+
+-- Grant permission to use the function
+GRANT EXECUTE ON FUNCTION public.create_campaign_with_dm TO authenticated;

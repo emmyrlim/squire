@@ -1,7 +1,23 @@
 import { Form, useActionData, useSearchParams } from "@remix-run/react";
-import type { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { createClient } from "@/shared/lib/supabase.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { supabase, headers } = createClient(request);
+
+  // Check if user is already authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    // User is already logged in, redirect to dashboard
+    return redirect("/dashboard", { headers });
+  }
+
+  return null;
+}
 
 export async function action({ request }: ActionFunctionArgs) {
   const { supabase, headers } = createClient(request);
@@ -31,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return redirect("/create-profile", { headers });
   }
 
-  const response = redirect("/campaigns", {
+  const response = redirect("/dashboard", {
     headers,
   });
 

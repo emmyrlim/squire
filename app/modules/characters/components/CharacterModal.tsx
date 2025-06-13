@@ -1,12 +1,12 @@
 import { Form, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 
-interface CampaignModalProps {
+interface CharacterModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
+export function CharacterModal({ isOpen, onClose }: CharacterModalProps) {
   const actionData = useActionData<{ error?: string; success?: string }>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -23,7 +23,7 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
     }
   }, [isOpen]);
 
-  // Close modal on successful campaign creation
+  // Close modal on successful character creation
   useEffect(() => {
     if (actionData?.success) {
       onClose();
@@ -39,7 +39,7 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Create New Campaign
+            Create New Character
           </h3>
           <button
             onClick={onClose}
@@ -63,14 +63,14 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
         </div>
 
         <Form method="post" className="space-y-4">
-          <input type="hidden" name="intent" value="create-campaign" />
+          <input type="hidden" name="intent" value="create-character" />
 
           <div>
             <label
               htmlFor="name"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Campaign Name
+              Name *
             </label>
             <input
               type="text"
@@ -79,7 +79,7 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
               required
               maxLength={100}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              placeholder="Enter campaign name"
+              placeholder="Enter character name"
             />
           </div>
 
@@ -95,8 +95,78 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
               id="description"
               rows={3}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              placeholder="Enter campaign description"
+              placeholder="Enter character description"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="class"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Class
+              </label>
+              <input
+                type="text"
+                name="class"
+                id="class"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="e.g., Fighter, Wizard"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="level"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Level
+              </label>
+              <input
+                type="number"
+                name="level"
+                id="level"
+                min="1"
+                max="20"
+                defaultValue="1"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="race"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Race
+              </label>
+              <input
+                type="text"
+                name="race"
+                id="race"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="e.g., Human, Elf"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="background"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Background
+              </label>
+              <input
+                type="text"
+                name="background"
+                id="background"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="e.g., Noble, Criminal"
+              />
+            </div>
           </div>
 
           {actionData?.error && (
@@ -118,7 +188,7 @@ export function CampaignModal({ isOpen, onClose }: CampaignModalProps) {
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
-              {isSubmitting ? "Creating..." : "Create Campaign"}
+              {isSubmitting ? "Creating..." : "Create Character"}
             </button>
           </div>
         </Form>
