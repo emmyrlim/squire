@@ -1,5 +1,23 @@
-import type { MetaFunction } from "@remix-run/node";
+import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { Link } from "@remix-run/react";
+import { redirect } from "@remix-run/node";
+import { createClient } from "@/shared/lib/supabase.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { supabase, headers } = createClient(request);
+
+  // Check if user is already authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    // User is already logged in, redirect to dashboard
+    return redirect("/dashboard", { headers });
+  }
+
+  return null;
+}
 
 export const meta: MetaFunction = () => {
   return [
