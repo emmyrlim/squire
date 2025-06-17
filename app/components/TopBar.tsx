@@ -1,6 +1,6 @@
 import { Form } from "@remix-run/react";
 
-export function TopNav() {
+export function TopBar() {
   return (
     <nav className="bg-white dark:bg-gray-800 shadow">
       <div className="flex justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

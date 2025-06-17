@@ -8,8 +8,8 @@
 
 ### Target Users
 
-- **Primary**: Dungeon Masters running ongoing D&D campaigns
-- **Secondary**: Players who want to contribute to campaign documentation
+- **Primary**: Players who want to an easy and convenient way to organize and view data from a campaign as it is revealed to them
+- **Secondary**: Dungeon Masters who want to contribute to documentation, see what their players know, or want to use this tool to manually reveal pre-generated information
 - **Tertiary**: D&D groups seeking better session organization
 
 ### Core Value Proposition
@@ -44,7 +44,7 @@ Transform scattered session notes into an organized, AI-enhanced campaign wiki t
 
 - CRUD operations for locations (name, description)
 - Search and sort functionality
-- Auto-linking to related entities (NPCs, other locations)
+- AI assisted Auto-linking to related entities (NPCs, other locations)
 - Visual organization with clear hierarchy
 
 **Future Enhancements**:
@@ -60,7 +60,7 @@ Transform scattered session notes into an organized, AI-enhanced campaign wiki t
 
 - NPC profiles with name, description, race, class, affiliations
 - CRUD operations with search/sort
-- Auto-linking in descriptions
+- AI assisted Auto-linking in descriptions
 - Relationship mapping between NPCs
 
 **Future Enhancements**:
@@ -118,6 +118,52 @@ Transform scattered session notes into an organized, AI-enhanced campaign wiki t
 - Character sheet integration (basic description)
 - Campaign selection on login
 - Equal permissions for all users initially
+
+#### Invite System (Current Implementation)
+
+**User Story**: As a DM, I want to invite players to my campaign using a secure invite code.
+
+**Acceptance Criteria**:
+
+- Auto-generated unique invite codes for each campaign
+- DM-only visibility of invite codes
+- Ability to regenerate invite codes
+- Secure code display with show/hide functionality
+- Prevention of duplicate campaign memberships
+- Clear feedback on join success/failure
+
+**Future Enhancements**:
+
+- **Invite Code Management**:
+
+  - Set expiry dates for invite codes
+  - Limit number of uses per code
+  - Generate multiple invite codes
+  - Revoke specific invite codes
+  - View usage history of invite codes
+
+- **Invite Sharing**:
+
+  - Direct email invites
+  - QR code generation for easy sharing
+  - Copy to clipboard functionality
+  - Share via social media
+  - Custom invite messages
+
+- **Access Control**:
+
+  - Role-based invite codes (DM vs Player)
+  - Character slot limits
+  - Approval workflow for joins
+  - Temporary access codes
+  - Campaign password protection
+
+- **Analytics**:
+  - Track invite code usage
+  - Monitor campaign growth
+  - Player retention metrics
+  - Join/leave history
+  - Active player statistics
 
 ## Technical Requirements
 

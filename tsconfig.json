@@ -32,16 +32,16 @@
       "@/*": ["./app/*"],
       "@/shared/*": ["./app/shared/*"],
       "@/modules/*": ["./app/modules/*"],
-      "@/auth": ["./app/modules/auth"],
-      "@/campaigns": ["./app/modules/campaigns"],
-      "@/sessions": ["./app/modules/sessions"],
-      "@/locations": ["./app/modules/locations"],
-      "@/npcs": ["./app/modules/npcs"],
-      "@/inventory": ["./app/modules/inventory"],
-      "@/quests": ["./app/modules/quests"],
-      "@/bestiary": ["./app/modules/bestiary"],
-      "@/ai": ["./app/modules/ai"],
-      "@/characters": ["./app/modules/characters"]
+      "@/auth/*": ["./app/modules/auth/*"],
+      "@/campaigns/*": ["./app/modules/campaigns/*"],
+      "@/sessions/*": ["./app/modules/sessions/*"],
+      "@/locations/*": ["./app/modules/locations/*"],
+      "@/npcs/*": ["./app/modules/npcs/*"],
+      "@/inventory/*": ["./app/modules/inventory/*"],
+      "@/quests/*": ["./app/modules/quests/*"],
+      "@/bestiary/*": ["./app/modules/bestiary/*"],
+      "@/ai/*": ["./app/modules/ai/*"],
+      "@/characters/*": ["./app/modules/characters/*"]
     },
 
     // Vite takes care of building everything, not tsc.

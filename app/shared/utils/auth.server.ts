@@ -22,7 +22,7 @@ export async function requireAuth(request: Request) {
 }
 
 export async function getOptionalAuth(request: Request) {
-  const supabase = createClient(request);
+  const { supabase } = createClient(request);
 
   const {
     data: { session },

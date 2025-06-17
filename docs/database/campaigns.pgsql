@@ -212,3 +212,45 @@ $$;
 
 -- Grant permission to use the function
 GRANT EXECUTE ON FUNCTION public.create_campaign_with_dm TO authenticated;
+
+-- Function to regenerate campaign invite code
+CREATE OR REPLACE FUNCTION regenerate_campaign_invite_code(campaign_id UUID)
+RETURNS TABLE (
+    id UUID,
+    name VARCHAR,
+    invite_code VARCHAR
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    campaign_record RECORD;
+BEGIN
+    -- Check if user is the DM of this campaign
+    IF NOT EXISTS (
+        SELECT 1 FROM campaign_users cu
+        WHERE cu.campaign_id = regenerate_campaign_invite_code.campaign_id
+        AND cu.user_id = auth.uid()
+        AND cu.role = 'dm'
+    ) THEN
+        RAISE EXCEPTION 'Only the DM can regenerate invite codes';
+    END IF;
+
+    -- Generate new invite code and update campaign
+    UPDATE campaigns
+    SET invite_code = substr(md5(random()::text), 1, 8)
+    WHERE id = regenerate_campaign_invite_code.campaign_id
+    RETURNING * INTO campaign_record;
+
+    -- Return updated campaign info
+    RETURN QUERY
+    SELECT
+        campaign_record.id,
+        campaign_record.name,
+        campaign_record.invite_code;
+END;
+$$;
+
+-- Grant permission to use the function
+GRANT EXECUTE ON FUNCTION public.regenerate_campaign_invite_code TO authenticated;

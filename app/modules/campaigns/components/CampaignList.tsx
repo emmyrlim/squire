@@ -1,14 +1,17 @@
 import { Link } from "@remix-run/react";
 import { useState } from "react";
 import { CampaignModal } from "./CampaignModal";
+import { JoinCampaignModal } from "./JoinCampaignModal";
 import type { Campaign } from "@/campaigns/types";
+import { PlusIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
 interface CampaignListProps {
   campaigns: Campaign[];
 }
 
 export function CampaignList({ campaigns }: CampaignListProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -21,12 +24,20 @@ export function CampaignList({ campaigns }: CampaignListProps) {
             Select a campaign to continue your adventure
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none space-x-3">
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsJoinModalOpen(true)}
+            className="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 sm:w-auto"
+          >
+            <UserPlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            Join Campaign
+          </button>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
           >
-            Create Campaign
+            <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            New Campaign
           </button>
         </div>
       </div>
@@ -35,7 +46,7 @@ export function CampaignList({ campaigns }: CampaignListProps) {
         {campaigns.map((campaign) => (
           <Link
             key={campaign.id}
-            to={`/campaigns/${campaign.id}`}
+            to={`/campaigns/${campaign.slug}`}
             className="block bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow"
           >
             <div className="p-6">
@@ -66,22 +77,35 @@ export function CampaignList({ campaigns }: CampaignListProps) {
             No campaigns
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Get started by creating your first campaign.
+            Get started by creating your first campaign or joining an existing
+            one.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 space-x-3">
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => setIsJoinModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-secondary-600 hover:bg-secondary-700"
+            >
+              <UserPlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              Join Campaign
+            </button>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
             >
-              Create Campaign
+              <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+              New Campaign
             </button>
           </div>
         </div>
       )}
 
       <CampaignModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+      <JoinCampaignModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
       />
     </div>
   );

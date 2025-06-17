@@ -1,60 +1,63 @@
 import { useLoaderData, useActionData } from "@remix-run/react";
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  MetaFunction,
+} from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { CampaignList } from "~/modules/campaigns/components/CampaignList";
+import { CampaignList } from "@/modules/campaigns/components/CampaignList";
 import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { CharacterList } from "@/modules/characters/components/CharacterList";
 
-// Alternative: If you want to handle the response differently
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Squire - Your D&D Campaign Companion" },
+    {
+      name: "description",
+      content:
+        "Transform your D&D sessions into an organized, AI-enhanced campaign wiki. Track NPCs, locations, quests, and more.",
+    },
+  ];
+};
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabase, user } = await requireAuth(request);
 
-  try {
-    // Get both profile and campaigns
-    const [profileResponse, campaignsResponse, charactersResponse] =
-      await Promise.all([
-        supabase.rpc("get_current_user_profile"),
-        supabase.rpc("get_user_campaigns_with_details"),
-        supabase.rpc("get_user_characters_with_campaigns"),
-      ]);
+  // Get all campaigns where user is a member (including as DM)
+  const { data: campaigns, error: campaignsError } = await supabase
+    .from("campaigns")
+    .select(
+      `
+      *,
+      campaign_users!inner (
+        role
+      )
+    `
+    )
+    .eq("campaign_users.user_id", user.id)
+    .order("created_at", { ascending: false });
 
-    if (profileResponse.error) {
-      throw new Error(`Profile error: ${profileResponse.error.message}`);
-    }
-
-    if (campaignsResponse.error) {
-      throw new Error(`Campaigns error: ${campaignsResponse.error.message}`);
-    }
-
-    if (charactersResponse.error) {
-      throw new Error(`Characters error: ${charactersResponse.error.message}`);
-    }
-
-    const profile = profileResponse.data?.[0];
-    const campaigns = campaignsResponse.data || [];
-    const characters = charactersResponse.data || [];
-
-    return Response.json({
-      campaigns,
-      user,
-      profile,
-      characters,
-      error: null,
-    });
-  } catch (error) {
-    console.error("Loader error:", error);
-
-    return Response.json({
-      campaigns: [],
-      user,
-      profile: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+  if (campaignsError) {
+    console.error("Error loading campaigns:", campaignsError);
+    throw new Response("Failed to load campaigns", { status: 500 });
   }
+
+  // Get all characters created by the user
+  const { data: characters, error: charactersError } = await supabase
+    .from("characters")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (charactersError) {
+    console.error("Error loading characters:", charactersError);
+    throw new Response("Failed to load characters", { status: 500 });
+  }
+
+  return { campaigns, characters };
 }
 
-// Action: Create a new campaign
 export async function action({ request }: ActionFunctionArgs) {
   const { supabase, user } = await requireAuth(request);
 
@@ -121,6 +124,74 @@ export async function action({ request }: ActionFunctionArgs) {
       success: "Campaign created successfully!",
       error: null,
       campaign: newCampaign,
+    });
+  }
+
+  if (intent === "join-campaign") {
+    const inviteCode = String(formData.get("invite_code")).trim();
+
+    if (!inviteCode) {
+      return Response.json(
+        { error: "Invite code is required", success: null },
+        { status: 400 }
+      );
+    }
+
+    // First, find the campaign with this invite code
+    const { data: campaign, error: campaignError } = await supabase
+      .from("campaigns")
+      .select("id, name")
+      .eq("invite_code", inviteCode)
+      .single();
+
+    if (campaignError || !campaign) {
+      return Response.json(
+        { error: "Invalid invite code", success: null },
+        { status: 400 }
+      );
+    }
+
+    // Check if user is already a member
+    const { data: existingMembership, error: membershipError } = await supabase
+      .from("campaign_users")
+      .select("id")
+      .eq("campaign_id", campaign.id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (membershipError && membershipError.code !== "PGRST116") {
+      console.error("Error checking membership:", membershipError);
+      return Response.json(
+        { error: "Failed to check campaign membership", success: null },
+        { status: 500 }
+      );
+    }
+
+    if (existingMembership) {
+      return Response.json(
+        { error: "You are already a member of this campaign", success: null },
+        { status: 400 }
+      );
+    }
+
+    // Add user as a player to the campaign
+    const { error: joinError } = await supabase.from("campaign_users").insert({
+      campaign_id: campaign.id,
+      user_id: user.id,
+      role: "player",
+    });
+
+    if (joinError) {
+      console.error("Error joining campaign:", joinError);
+      return Response.json(
+        { error: "Failed to join campaign. Please try again.", success: null },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({
+      success: `Successfully joined ${campaign.name}!`,
+      error: null,
     });
   }
 
