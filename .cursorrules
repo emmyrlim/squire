@@ -136,14 +136,46 @@ ai_suggestions (campaign_id, suggestion_type, suggested_name, suggested_data, is
 
 ### Security Model
 
-- **Row Level Security (RLS)**: Considering implementation
-- **Explicit filtering**: Currently using `.eq("created_by", user.id)` on all campaign queries
-- **Nested validation**: Child resources (NPCs, quests) validated through campaign ownership
-- **Slug-based access**: Campaign slugs are user-scoped, preventing cross-user access
+- **Row Level Security (RLS)**: Implemented for all tables
+- **Campaign Access Control**:
+  - Campaign creators (DMs) have full access to their campaigns
+  - Campaign members (players) have read access to campaign resources
+  - Special RLS policy allows viewing campaigns by invite code for joining
+- **Resource Access Patterns**:
+  - Two-step validation: First get campaign, then verify membership
+  - Membership check via `campaign_users` table
+  - Role-based access (DM vs player) for certain operations
+- **Error Handling**:
+  - 403 for unauthorized access (not a campaign member)
+  - 404 for not found resources
+  - 500 for server errors
 
 ### Query Patterns
 
-#### Single Query with JOIN (Preferred for performance)
+#### Campaign Access Pattern (Preferred)
+
+```typescript
+// 1. Get campaign by slug
+const { data: campaign } = await supabase
+  .from("campaigns")
+  .select("id, name, slug")
+  .eq("slug", campaignSlug)
+  .single();
+
+// 2. Verify user is a member
+const { data: membership } = await supabase
+  .from("campaign_users")
+  .select("role")
+  .eq("campaign_id", campaign.id)
+  .eq("user_id", user.id)
+  .single();
+
+if (!membership) {
+  throw new Response("You don't have access to this campaign", { status: 403 });
+}
+```
+
+#### Single Query with JOIN (For resource access)
 
 ```typescript
 // Get NPC with campaign validation in one query
@@ -157,17 +189,7 @@ const { data: npc } = await supabase
   )
   .eq("slug", npcSlug)
   .eq("campaigns.slug", campaignSlug)
-  .eq("campaigns.created_by", user.id)
   .single();
-```
-
-#### Two-Step Query (When explicit validation needed)
-
-```typescript
-// 1. Get campaign with user validation
-const campaign = await getCampaignBySlugSecure(campaignSlug, user.id);
-// 2. Get NPCs using campaign ID
-const npcs = await supabase.from("npcs").eq("campaign_id", campaign.id);
 ```
 
 ### Auto-Generated Slugs

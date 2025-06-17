@@ -137,14 +137,34 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    // First, find the campaign with this invite code
-    const { data: campaign, error: campaignError } = await supabase
+    console.log("Attempting to join campaign with invite code:", inviteCode);
+
+    // First, check if campaign exists without RLS
+    const { data: campaignCheck, error: checkError } = await supabase
+      .from("campaigns")
+      .select("id, name, invite_code")
+      .eq("invite_code", inviteCode);
+
+    console.log("Campaign existence check:", {
+      found: Array.isArray(campaignCheck) && campaignCheck.length > 0,
+      data: campaignCheck,
+      error: checkError,
+    });
+
+    // Then try to get the campaign with RLS
+    const { data: campaign, error: campaignJoinError } = await supabase
       .from("campaigns")
       .select("id, name")
       .eq("invite_code", inviteCode)
       .single();
 
-    if (campaignError || !campaign) {
+    if (campaignJoinError || !campaign) {
+      console.log("campaign joining error", campaignJoinError);
+      console.log("Query details:", {
+        inviteCode,
+        error: campaignJoinError,
+        data: campaign,
+      });
       return Response.json(
         { error: "Invalid invite code", success: null },
         { status: 400 }

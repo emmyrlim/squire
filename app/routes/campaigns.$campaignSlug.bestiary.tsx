@@ -10,16 +10,29 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     throw new Response("Campaign Slug is required", { status: 400 });
   }
 
-  // Get campaign with user validation
+  // First get the campaign
   const { data: campaign, error: campaignError } = await supabase
     .from("campaigns")
     .select("id, name, slug")
     .eq("slug", campaignSlug)
-    .eq("created_by", user.id)
     .single();
 
   if (campaignError || !campaign) {
     throw new Response("Campaign not found", { status: 404 });
+  }
+
+  // Then verify the user is a member of this campaign
+  const { data: membership, error: membershipError } = await supabase
+    .from("campaign_users")
+    .select("role")
+    .eq("campaign_id", campaign.id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (membershipError || !membership) {
+    throw new Response("You don't have access to this campaign", {
+      status: 403,
+    });
   }
 
   return json({ campaign });

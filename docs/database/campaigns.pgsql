@@ -56,6 +56,15 @@ CREATE POLICY "Users can view campaigns they belong to"
     )
   );
 
+-- Allow users to view campaigns by invite code
+-- This policy is necessary to allow users to join campaigns using invite codes
+-- Without this policy, users wouldn't be able to see campaigns they're trying to join
+CREATE POLICY "Users can view campaigns by invite code"
+  ON campaigns FOR SELECT
+  USING (
+    invite_code IS NOT NULL
+  );
+
 -- Any authenticated user can create campaigns
 CREATE POLICY "Authenticated users can create campaigns"
   ON campaigns FOR INSERT

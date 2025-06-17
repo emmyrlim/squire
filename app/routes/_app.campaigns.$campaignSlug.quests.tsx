@@ -11,15 +11,29 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Response("Campaign Slug is required", { status: 400 });
   }
 
+  // First get the campaign
   const { data: campaign, error: campaignError } = await supabase
     .from("campaigns")
-    .select("id, name, slug") // Only select what we need
+    .select("id, name, slug")
     .eq("slug", campaignSlug)
-    .eq("created_by", user.id) // 🔒 Security: only user's campaigns
     .single();
 
   if (campaignError || !campaign) {
     throw new Response("Campaign not found", { status: 404 });
+  }
+
+  // Then verify the user is a member of this campaign
+  const { data: membership, error: membershipError } = await supabase
+    .from("campaign_users")
+    .select("role")
+    .eq("campaign_id", campaign.id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (membershipError || !membership) {
+    throw new Response("You don't have access to this campaign", {
+      status: 403,
+    });
   }
 
   // Get quests for this campaign
