@@ -11,7 +11,7 @@ For more details and product requirements, please read `docs/prd/product-require
 - **Framework**: Remix (React-based full-stack framework)
 - **Database**: Supabase (PostgreSQL with real-time features)
 - **Authentication**: Supabase Auth
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS + shadcn/ui
 - **Hosting**: Vercel
 - **Language**: TypeScript
 
@@ -136,14 +136,46 @@ ai_suggestions (campaign_id, suggestion_type, suggested_name, suggested_data, is
 
 ### Security Model
 
-- **Row Level Security (RLS)**: Considering implementation
-- **Explicit filtering**: Currently using `.eq("created_by", user.id)` on all campaign queries
-- **Nested validation**: Child resources (NPCs, quests) validated through campaign ownership
-- **Slug-based access**: Campaign slugs are user-scoped, preventing cross-user access
+- **Row Level Security (RLS)**: Implemented for all tables
+- **Campaign Access Control**:
+  - Campaign creators (DMs) have full access to their campaigns
+  - Campaign members (players) have read access to campaign resources
+  - Special RLS policy allows viewing campaigns by invite code for joining
+- **Resource Access Patterns**:
+  - Two-step validation: First get campaign, then verify membership
+  - Membership check via `campaign_users` table
+  - Role-based access (DM vs player) for certain operations
+- **Error Handling**:
+  - 403 for unauthorized access (not a campaign member)
+  - 404 for not found resources
+  - 500 for server errors
 
 ### Query Patterns
 
-#### Single Query with JOIN (Preferred for performance)
+#### Campaign Access Pattern (Preferred)
+
+```typescript
+// 1. Get campaign by slug
+const { data: campaign } = await supabase
+  .from("campaigns")
+  .select("id, name, slug")
+  .eq("slug", campaignSlug)
+  .single();
+
+// 2. Verify user is a member
+const { data: membership } = await supabase
+  .from("campaign_users")
+  .select("role")
+  .eq("campaign_id", campaign.id)
+  .eq("user_id", user.id)
+  .single();
+
+if (!membership) {
+  throw new Response("You don't have access to this campaign", { status: 403 });
+}
+```
+
+#### Single Query with JOIN (For resource access)
 
 ```typescript
 // Get NPC with campaign validation in one query
@@ -157,17 +189,7 @@ const { data: npc } = await supabase
   )
   .eq("slug", npcSlug)
   .eq("campaigns.slug", campaignSlug)
-  .eq("campaigns.created_by", user.id)
   .single();
-```
-
-#### Two-Step Query (When explicit validation needed)
-
-```typescript
-// 1. Get campaign with user validation
-const campaign = await getCampaignBySlugSecure(campaignSlug, user.id);
-// 2. Get NPCs using campaign ID
-const npcs = await supabase.from("npcs").eq("campaign_id", campaign.id);
 ```
 
 ### Auto-Generated Slugs
@@ -176,15 +198,62 @@ const npcs = await supabase.from("npcs").eq("campaign_id", campaign.id);
 - **Collision handling**: Append numbers for duplicates (e.g., `gandalf-2`)
 - **Scope awareness**: Unique within appropriate scope (user for campaigns, campaign for NPCs)
 
+### UI Components & Styling
+
+- **Component Library**: shadcn/ui
+
+  - Built on Radix UI primitives
+  - Customizable and accessible components
+  - Styled with Tailwind CSS
+  - Components located in `app/shared/components/ui/`
+  - Uses New York style with Slate color scheme
+  - Custom theme with orange primary color (HSL: 24 95% 53%)
+
+- **Component Organization**:
+
+  - All shadcn components in `app/shared/components/ui/`
+  - Custom components extend shadcn components
+  - Consistent import paths using `@/shared/components/ui/`
+  - Components follow shadcn's composition pattern
+
+- **Theme Customization**:
+
+  - CSS variables in `app/tailwind.css`
+  - Custom color scheme with orange as primary
+  - Dark mode support
+  - Consistent spacing and typography
+
+- **Component Usage**:
+
+  ```tsx
+  import { Button } from "@/shared/components/ui/button"
+
+  // Default button
+  <Button>Click me</Button>
+
+  // Variants
+  <Button variant="destructive">Delete</Button>
+  <Button variant="outline">Outline</Button>
+  <Button variant="secondary">Secondary</Button>
+  <Button variant="ghost">Ghost</Button>
+  <Button variant="link">Link</Button>
+  <Button variant="glowing">Glowing</Button>
+
+  // Sizes
+  <Button size="sm">Small</Button>
+  <Button size="default">Default</Button>
+  <Button size="lg">Large</Button>
+  <Button size="icon">🔍</Button>
+  ```
+
 ## Key Files & Structure
 
 ```
 app/
 ├── routes/
-│   ├── campaigns.$campaignSlug.tsx          # Parent route - loads campaign
-│   ├── campaigns.$campaignSlug.npcs.tsx     # NPCs list
-│   ├── campaigns.$campaignSlug.npcs.$npcSlug.tsx # Single NPC
-│   └── campaigns.$campaignSlug.npcs.new.tsx # Create NPC
+│   ├── _app.campaigns.$campaignSlug.tsx          # Parent route - loads campaign
+│   ├── _app.campaigns.$campaignSlug.[entity]._index.tsx     # Entity list/overview
+│   └── _app.campaigns.$campaignSlug.[entity].$[entitySlug].tsx # Single entity details
 ├── modules/                                 # Feature-based module organization
 │   ├── ai/
 │   │   ├── components/
@@ -198,57 +267,64 @@ app/
 │   │   └── types.ts
 │   ├── campaigns/
 │   │   ├── components/
-│   │   │   ├── CampaignList.tsx
-│   │   │   └── CampaignModal.tsx
+│   │   │   ├── campaign-list.tsx
+│   │   │   └── campaign-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface Campaign {}
 │   ├── npcs/
 │   │   ├── components/
-│   │   │   ├── NPCList.tsx
-│   │   │   └── NPCModal.tsx
+│   │   │   ├── npc-list.tsx
+│   │   │   ├── npc-details.tsx
+│   │   │   └── npc-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface NPC {}
 │   ├── quests/
 │   │   ├── components/
-│   │   │   ├── QuestList.tsx
-│   │   │   └── QuestModal.tsx
+│   │   │   ├── quest-list.tsx
+│   │   │   ├── quest-details.tsx
+│   │   │   └── quest-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface Quest {}
 │   ├── sessions/
 │   │   ├── components/
-│   │   │   ├── SessionList.tsx
-│   │   │   └── SessionModal.tsx
+│   │   │   ├── session-list.tsx
+│   │   │   ├── session-details.tsx
+│   │   │   └── session-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface Session {}
 │   ├── locations/
 │   │   ├── components/
-│   │   │   ├── LocationList.tsx
-│   │   │   └── LocationModal.tsx
+│   │   │   ├── location-list.tsx
+│   │   │   ├── location-details.tsx
+│   │   │   └── location-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface Location {}
 │   ├── inventory/
 │   │   ├── components/
-│   │   │   ├── InventoryList.tsx
-│   │   │   └── InventoryModal.tsx
+│   │   │   ├── inventory-list.tsx
+│   │   │   ├── inventory-details.tsx
+│   │   │   └── inventory-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface Item {}
 │   ├── characters/
 │   │   ├── components/
-│   │   │   ├── CharacterList.tsx
-│   │   │   └── CharacterModal.tsx
+│   │   │   ├── character-list.tsx
+│   │   │   ├── character-details.tsx
+│   │   │   └── character-modal.tsx
 │   │   ├── services/
 │   │   ├── utils/
 │   │   └── types.ts                         # interface Character {}
 │   └── bestiary/
 │       ├── components/
-│       │   ├── BestiaryList.tsx
-│       │   └── BestiaryModal.tsx
+│       │   ├── bestiary-list.tsx
+│       │   ├── bestiary-details.tsx
+│       │   └── bestiary-modal.tsx
 │       ├── services/
 │       ├── utils/
 │       └── types.ts                         # interface Monster {}
@@ -262,9 +338,13 @@ app/
 
 ### Module Organization Patterns
 
-- **List Components**: `[Entity]List.tsx` for displaying collections (e.g., `QuestList.tsx`)
-- **Modal Components**: `[Entity]Modal.tsx` for creation/editing forms (e.g., `QuestModal.tsx`)
-- **Detail Pages**: Individual entity pages for bestiary, characters, inventory, locations, npcs, quests, sessions
+- **List Components**: `[entity]-list.tsx` for displaying collections (e.g., `quest-list.tsx`)
+- **Detail Components**: `[entity]-details.tsx` for displaying single entity details (e.g., `quest-details.tsx`)
+- **Modal Components**: `[entity]-modal.tsx` for creation/editing forms (e.g., `quest-modal.tsx`)
+- **Route Structure**:
+  - `_app.campaigns.$campaignSlug.[entity]._index.tsx` - Overview and list route
+  - `_app.campaigns.$campaignSlug.[entity].$[entitySlug].tsx` - Single entity details
+- **Entity Creation**: All new entities are created via modal forms, not dedicated routes
 - **Services**: Database queries and API calls specific to each module
 - **Utils**: Helper functions and business logic for each domain
 - **Types**: Interface definitions for each entity (e.g., `interface Quest {}`)
@@ -320,7 +400,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   if (campaignError || !campaign) {
     throw new Response("Campaign not found", { status: 404 });
   }
-  // ... rest of loader
+
+  return Response.json({ campaign });
 }
 ```
 
@@ -334,6 +415,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const formData = await request.formData();
   // Validate campaign ownership before mutations
   // Use campaign.id for foreign key relationships
+  return Response.json({ success: true });
 }
 ```
 
@@ -402,10 +484,10 @@ $$ LANGUAGE plpgsql;
 - Database queries abstracted into utility functions
 - Types defined separately and imported
 - Consistent error handling patterns across routes
-- Streamline html as much as possible
-- Use the most semantic tags, and avoid redundant wrapping DOM elements where possible
+- Streamline html as much as possible - use the most semantic tags, and avoid redundant wrapping DOM elements where possible
 - Use absolute paths from tsconfig.json for imports (e.g., `@/shared/components/ui/button`)
 - Prefer using shared UI components from `@/shared/components/ui` over custom styling when possible
+- Use kebab-case for all filenames (e.g., `campaign-list.tsx` instead of `CampaignList.tsx`)
 
 ## Debugging Tips
 

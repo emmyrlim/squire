@@ -1,7 +1,7 @@
 import { useLoaderData } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { QuestPage } from "~/modules/quests/components/QuestPage";
+import { QuestPage } from "~/modules/quests/components/quest-page";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabase } = await requireAuth(request);

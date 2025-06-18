@@ -1,4 +1,4 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { type LoaderFunctionArgs } from "@remix-run/node";
 import { Outlet, useLoaderData } from "@remix-run/react";
 import { requireAuth } from "@/shared/utils/auth.server";
 
@@ -35,7 +35,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     });
   }
 
-  return json({ campaign });
+  return Response.json({ campaign });
 }
 
 export default function BestiaryLayout() {

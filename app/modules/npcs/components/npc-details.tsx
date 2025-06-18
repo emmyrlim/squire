@@ -1,10 +1,10 @@
 import type { NPC } from "~/modules/npcs/types";
 
-interface NPCPageProps {
+interface NPCDetailsProps {
   npc: NPC;
 }
 
-export function NPCPage({ npc }: NPCPageProps) {
+export function NPCDetails({ npc }: NPCDetailsProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">

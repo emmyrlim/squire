@@ -1,7 +1,7 @@
 import { useLoaderData, useActionData, Form } from "@remix-run/react";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "~/shared/components/ui/button-old";
 import {
   Card,
   CardContent,

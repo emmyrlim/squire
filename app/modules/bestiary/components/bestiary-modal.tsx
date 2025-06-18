@@ -16,17 +16,20 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Monster } from "../types";
+import { Campaign } from "@/modules/campaigns/types";
 
 interface BestiaryModalProps {
   monster?: Monster;
   isOpen: boolean;
   onClose: () => void;
+  campaign: Campaign;
 }
 
 export function BestiaryModal({
   monster,
   isOpen,
   onClose,
+  campaign,
 }: BestiaryModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -36,6 +39,8 @@ export function BestiaryModal({
         </DialogHeader>
 
         <Form method="post" className="space-y-4">
+          <input type="hidden" name="campaignId" value={campaign.id} />
+
           <FormField
             name="name"
             defaultValue={monster?.name}
@@ -86,7 +91,7 @@ export function BestiaryModal({
                 <FormItem>
                   <FormLabel>Hit Points</FormLabel>
                   <FormControl>
-                    <Input {...field} required />
+                    <Input type="number" {...field} required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -184,7 +189,7 @@ export function BestiaryModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" variant="default">
               {monster ? "Save Changes" : "Add Monster"}
             </Button>
           </div>

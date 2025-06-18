@@ -1,4 +1,4 @@
-interface Quest {
+export interface Quest {
   id: string;
   title: string;
   description: string;
@@ -16,5 +16,3 @@ interface Quest {
   created_at: string;
   updated_at: string;
 }
-
-export type { Quest };

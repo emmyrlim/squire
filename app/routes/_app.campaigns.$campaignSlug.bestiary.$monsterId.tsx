@@ -1,11 +1,10 @@
 import {
-  json,
   redirect,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { MonsterDetail } from "@/modules/bestiary/components/MonsterDetail";
+import { MonsterDetail } from "@/modules/bestiary/components/monster-detail";
 import { requireAuth } from "@/shared/utils/auth.server";
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -43,7 +42,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     throw new Response("Monster not found", { status: 404 });
   }
 
-  return json({ monster, campaignSlug });
+  return Response.json({ monster, campaignSlug });
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {

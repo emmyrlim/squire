@@ -4,10 +4,10 @@ import { useEffect, useRef } from "react";
 interface QuestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  campaignId: string;
+  campaignSlug: string;
 }
 
-export function QuestModal({ isOpen, onClose, campaignId }: QuestModalProps) {
+export function QuestModal({ isOpen, onClose, campaignSlug }: QuestModalProps) {
   const actionData = useActionData<{ error?: string; success?: string }>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -65,7 +65,6 @@ export function QuestModal({ isOpen, onClose, campaignId }: QuestModalProps) {
 
         <Form method="post" className="space-y-4">
           <input type="hidden" name="intent" value="create-quest" />
-          <input type="hidden" name="campaignId" value={campaignId} />
 
           <div>
             <label

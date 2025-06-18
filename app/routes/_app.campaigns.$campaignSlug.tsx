@@ -1,7 +1,7 @@
 import { useLoaderData, Outlet } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { Sidebar } from "~/modules/campaigns/components/Sidebar";
+import { Sidebar } from "~/modules/campaigns/components/sidebar";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabase, user } = await requireAuth(request);

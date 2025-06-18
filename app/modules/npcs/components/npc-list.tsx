@@ -1,6 +1,6 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
 import { Link } from "@remix-run/react";
 import type { NPC } from "@/npcs/types";
+import { AddButton } from "@/shared/components/ui/add-button";
 
 interface NPCListProps {
   npcs: NPC[];
@@ -16,13 +16,12 @@ export function NPCList({ npcs, campaignSlug, onOpen }: NPCListProps) {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             NPCs
           </h1>
-          <button
+          <AddButton
             onClick={() => onOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            variant={npcs.length === 0 ? "glowing" : "default"}
           >
-            <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add NPC
-          </button>
+          </AddButton>
         </div>
 
         {npcs.length === 0 ? (

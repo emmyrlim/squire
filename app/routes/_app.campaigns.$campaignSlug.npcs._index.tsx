@@ -1,9 +1,9 @@
-import { NPCList } from "~/modules/npcs/components/NPCList";
+import { NPCList } from "~/modules/npcs/components/npc-list";
 import { useOutletContext } from "@remix-run/react";
 import { Campaign } from "~/modules/campaigns/types";
 import { NPC } from "~/modules/npcs/types";
 import { useState } from "react";
-import { NPCModal } from "~/modules/npcs/components/NPCModal";
+import { NPCModal } from "~/modules/npcs/components/npc-modal";
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
 

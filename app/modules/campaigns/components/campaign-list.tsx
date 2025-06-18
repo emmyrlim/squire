@@ -1,7 +1,7 @@
 import { Link } from "@remix-run/react";
 import { useState } from "react";
-import { CampaignModal } from "./CampaignModal";
-import { JoinCampaignModal } from "./JoinCampaignModal";
+import { CampaignModal } from "./campaign-modal";
+import { JoinCampaignModal } from "./join-campaign-modal";
 import type { Campaign } from "@/campaigns/types";
 import { PlusIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { CharacterModal } from "./CharacterModal";
+import { CharacterModal } from "./character-modal";
 import type { Character } from "../types";
 
 interface CharacterListProps {

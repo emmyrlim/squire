@@ -5,10 +5,10 @@ import type {
   MetaFunction,
 } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { CampaignList } from "@/modules/campaigns/components/CampaignList";
+import { CampaignList } from "@/modules/campaigns/components/campaign-list";
 import { useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { CharacterList } from "@/modules/characters/components/CharacterList";
+import { CharacterList } from "@/modules/characters/components/character-list";
 
 export const meta: MetaFunction = () => {
   return [

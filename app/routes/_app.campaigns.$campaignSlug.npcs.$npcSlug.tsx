@@ -1,12 +1,12 @@
 import { useLoaderData } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { NPCPage } from "~/modules/npcs/components/NPCPage";
+import { NPCDetails } from "~/modules/npcs/components/npc-details";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabase, user } = await requireAuth(request);
   const { campaignSlug, npcSlug } = params;
-  
+
   const { data: npc, error } = await supabase
     .from("npcs")
     .select(
@@ -39,5 +39,5 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function NPCRoute() {
   const { npc } = useLoaderData<typeof loader>();
-  return <NPCPage npc={npc} />;
+  return <NPCDetails npc={npc} />;
 }

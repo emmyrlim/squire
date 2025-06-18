@@ -1,4 +1,4 @@
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "~/shared/components/ui/button-old";
 import { Monster } from "../types";
 
 interface MonsterDetailProps {

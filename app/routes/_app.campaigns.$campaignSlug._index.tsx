@@ -1,6 +1,6 @@
 import { useOutletContext, useActionData } from "@remix-run/react";
 import type { Campaign } from "~/modules/campaigns/types";
-import { InviteCodeManager } from "~/modules/campaigns/components/InviteCodeManager";
+import { InviteCodeManager } from "~/modules/campaigns/components/invite-code-manager";
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
 
