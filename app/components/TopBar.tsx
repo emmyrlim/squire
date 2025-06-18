@@ -1,15 +1,22 @@
-import { Form } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react";
+import { Settings } from "lucide-react";
 
 export function TopBar() {
   return (
     <nav className="bg-white dark:bg-gray-800 shadow">
       <div className="flex justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex-shrink-0 flex items-center">
-          <a href="/" className="text-xl font-bold text-primary-600">
+          <Link to="/" className="text-xl font-bold text-primary-600">
             Squire
-          </a>
+          </Link>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/settings"
+            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-2 rounded-md"
+          >
+            <Settings className="h-5 w-5" />
+          </Link>
           <Form method="post" action="/logout">
             <button
               type="submit"

@@ -1,207 +1,227 @@
-# Squire - D&D Session Tracking App
+# Squire - AI-Powered D&D Session Logger
 
 ## Product Requirements Document (PRD)
 
 ### Product Overview
 
-**Squire** is a multi-user D&D session tracking application that leverages AI to help Dungeon Masters and players maintain an organized, searchable campaign glossary. The app addresses the common problem of losing track of story elements, NPCs, locations, items, and quests across multiple sessions.
+**Squire** is a collaborative D&D session logging application that uses AI to automatically extract and organize campaign knowledge from live session transcripts. The app transforms real-time session notes into a searchable, interconnected knowledge base of NPCs, locations, quests, mysteries, monsters, and magical items.
 
 ### Target Users
 
-- **Primary**: Players who want to an easy and convenient way to organize and view data from a campaign as it is revealed to them
-- **Secondary**: Dungeon Masters who want to contribute to documentation, see what their players know, or want to use this tool to manually reveal pre-generated information
-- **Tertiary**: D&D groups seeking better session organization
+- **Primary**: D&D groups who want to collaboratively log sessions in real-time and automatically build campaign knowledge
+- **Secondary**: Players who want an organized, AI-enhanced view of campaign information as it unfolds
+- **Tertiary**: DMs who want to see what information their players are capturing and contributing
 
 ### Core Value Proposition
 
-Transform scattered session notes into an organized, AI-enhanced campaign wiki that automatically suggests connections and maintains narrative continuity.
+Transform live D&D session chatter into an organized, AI-enhanced campaign knowledge base that automatically identifies, categorizes, and cross-references story elements in real-time.
 
 ## Feature Requirements
 
-### 1. Story Tracking (MVP)
+### 1. Collaborative Session Logging (MVP)
 
-**User Story**: As a DM, I want to input rough session summaries and have AI create thematic, organized story logs.
-
-**Acceptance Criteria**:
-
-- Users can input raw session summaries
-- Summaries are stored chronologically by session number
-- Full-text search across all session summaries
-- AI transforms raw input into thematic narrative
-- AI suggests NPCs, items, quests, and monsters to add based on context
-- Story builds cumulatively across sessions
-
-**Future Enhancements**:
-
-- AI-generated bardic songs of sessions
-- AI-generated session images
-
-### 2. Locations Glossary (MVP)
-
-**User Story**: As a user, I want to maintain a searchable database of discovered locations with rich descriptions and cross-references.
+**User Story**: As a D&D group, we want to collaboratively log our session in real-time using a chat-like interface.
 
 **Acceptance Criteria**:
 
-- CRUD operations for locations (name, description)
-- Search and sort functionality
-- AI assisted Auto-linking to related entities (NPCs, other locations)
-- Visual organization with clear hierarchy
+- Campaign members can join a live session logging "room"
+- Discord-like chat interface for adding session notes
+- Real-time updates across all connected users
+- Session notes are chronological and attributed to users
+- "Start New Session" creates a new collaborative logging space
+- Session persistence and ability to return to previous sessions
 
-**Future Enhancements**:
+**Technical Requirements**:
 
-- AI-generated location maps
-- AI-generated location images
+- WebSocket/real-time updates for collaborative editing
+- Session state management
+- User attribution for each message/note
 
-### 3. NPCs Database (MVP)
+### 2. AI Knowledge Extraction (MVP)
 
-**User Story**: As a user, I want to track all NPCs met during the campaign with detailed information and relationships.
-
-**Acceptance Criteria**:
-
-- NPC profiles with name, description, race, class, affiliations
-- CRUD operations with search/sort
-- AI assisted Auto-linking in descriptions
-- Relationship mapping between NPCs
-
-**Future Enhancements**:
-
-- AI-generated NPC portraits
-
-### 4. Party Inventory (MVP)
-
-**User Story**: As a party, we want to track our collective and individual items with a transaction log.
+**User Story**: As a user, I want AI to automatically identify and extract key campaign information from our session logs.
 
 **Acceptance Criteria**:
 
-- Party gold total display
-- Individual player inventories
-- Shared party items section
-- Search functionality across all items
-- Transaction log with reasons for additions/removals
-- Easy add/remove interface
+- "Transcribe Session" button processes all session notes through AI
+- AI identifies and categorizes information into Detail Items:
+  - **NPCs**: Characters encountered (name, description, relationships)
+  - **Locations**: Places visited or mentioned (name, description, connections)
+  - **Monsters**: Creatures fought or encountered (stats, abilities, description)
+  - **Quests**: Objectives and storylines (description, status, rewards)
+  - **Mysteries**: Unexplained events or clues (description, theories)
+  - **Magical Items**: Artifacts and equipment (properties, effects, lore)
+- AI merges new information with existing Detail Items or creates new ones
+- AI generates cross-references and relationships between Detail Items
+- Processing status indicator during AI analysis
 
-### 5. Quest Tracking (MVP)
+**Technical Requirements**:
 
-**User Story**: As a DM, I want to organize active and completed quests with clear progression tracking.
+- LLM integration for content analysis and extraction
+- Intelligent merging logic for existing vs. new entities
+- Relationship detection and linking between entities
 
-**Acceptance Criteria**:
+### 3. Detail Items Knowledge Base (MVP)
 
-- Quest list with search/sort (recency, location, name)
-- Quest categorization (main, side, personal)
-- Auto-linking to relevant NPCs and locations
-- Quest progression tracking with next steps
-- Visual distinction for completed quests
-- AI-generated quest summaries
-
-### 6. Bestiary (MVP)
-
-**User Story**: As a DM, I want to catalog monsters encountered with combat statistics.
+**User Story**: As a user, I want to browse and search through all campaign knowledge extracted from our sessions.
 
 **Acceptance Criteria**:
 
-- Monster database with name, description, AC, attacks
-- Search and sort functionality
-- Easy add/edit/remove operations
+- Tile-based view of all Detail Items
+- Category filtering (NPC, Location, Monster, Quest, Mystery, Magical Item)
+- Full-text search across all Detail Items
+- Sort by relevance, recency, or alphabetical
+- Modal view for detailed information on each Detail Item
+- Clickable cross-references within Detail Item descriptions
+- Visual indicators for new/updated items since last session
 
-**Future Enhancements**:
+**Technical Requirements**:
 
-- AI-generated monster images
+- Efficient search implementation (trigram/vector search)
+- Modal management for nested Detail Item viewing
+- Real-time updates when new Detail Items are generated
 
-### 7. Campaign Management (MVP)
+### 4. Campaign Management (MVP)
 
-**User Story**: As a user, I want to manage multiple campaigns and collaborate with other users.
-
-**Acceptance Criteria**:
-
-- Campaign creation and joining via invite
-- User role management (DM vs Player)
-- Character sheet integration (basic description)
-- Campaign selection on login
-- Equal permissions for all users initially
-
-#### Invite System (Current Implementation)
-
-**User Story**: As a DM, I want to invite players to my campaign using a secure invite code.
+**User Story**: As a user, I want to create campaigns, invite players, and manage campaign membership.
 
 **Acceptance Criteria**:
 
-- Auto-generated unique invite codes for each campaign
-- DM-only visibility of invite codes
-- Ability to regenerate invite codes
-- Secure code display with show/hide functionality
-- Prevention of duplicate campaign memberships
-- Clear feedback on join success/failure
+- Campaign creation with unique invite codes
+- Join campaigns via invite code
+- Character assignment to campaigns
+- Role management (DM vs Player permissions)
+- Campaign selection and switching
+- Equal contribution permissions for all members initially
 
-**Future Enhancements**:
+### 5. Split-Screen Interface (MVP)
 
-- **Invite Code Management**:
+**User Story**: As a user, I want an efficient interface that allows me to log sessions and browse knowledge simultaneously.
 
-  - Set expiry dates for invite codes
-  - Limit number of uses per code
-  - Generate multiple invite codes
-  - Revoke specific invite codes
-  - View usage history of invite codes
+**Acceptance Criteria**:
 
-- **Invite Sharing**:
+- **Left Panel**: Session logging interface
+  - List of previous sessions
+  - Active session chat interface
+  - "Start New Session" / "Transcribe Session" controls
+- **Right Panel**: Knowledge browsing interface
+  - Search and filter controls
+  - Detail Items grid/list view
+  - Modal overlay for Detail Item details
+- Responsive design that works on desktop and tablet
+- Panels are independently scrollable
 
-  - Direct email invites
-  - QR code generation for easy sharing
-  - Copy to clipboard functionality
-  - Share via social media
-  - Custom invite messages
+## Technical Architecture
 
-- **Access Control**:
+### Frontend Architecture
 
-  - Role-based invite codes (DM vs Player)
-  - Character slot limits
-  - Approval workflow for joins
-  - Temporary access codes
-  - Campaign password protection
+- **Single Page Application (SPA)** - React/Remix with client-side routing
+- **Real-time Communication** - WebSockets for collaborative session logging
+- **State Management** - Optimistic updates with real-time synchronization
+- **Split Layout** - CSS Grid/Flexbox for two-panel interface
 
-- **Analytics**:
-  - Track invite code usage
-  - Monitor campaign growth
-  - Player retention metrics
-  - Join/leave history
-  - Active player statistics
+### Backend Architecture
 
-## Technical Requirements
+- **Session Management** - Real-time session state with WebSocket support
+- **AI Integration** - LLM API for content analysis and entity extraction
+- **Knowledge Graph** - Relationship mapping between Detail Items
+- **Search Engine** - Full-text and semantic search capabilities
 
-### Performance
+### Database Changes (from current schema)
 
-- Page load times under 2 seconds
-- Real-time collaboration updates
-- Mobile-responsive design
+- **sessions** table: Add real-time collaboration fields
+- **session_messages** table: Store individual chat messages with user attribution
+- **detail_items** table: Replace multiple entity tables with unified structure
+- **detail_item_relationships** table: Cross-references between items
+- **ai_processing_jobs** table: Track AI analysis status and results
 
-### Security
+## User Flow
 
-- User authentication and authorization
-- Campaign-based data isolation
-- Input sanitization and validation
+### Primary Flow: Session to Knowledge
 
-### Scalability
+1. User starts/joins a session → Chat interface appears
+2. Group collaboratively logs session notes → Real-time updates
+3. Session concludes → "Transcribe Session" button available
+4. AI processes notes → Detail Items generated/updated
+5. Users browse updated knowledge base → Discover new connections
 
-- Support for 10+ users per campaign
-- Handle 100+ entities per glossary section
-- Efficient search across large datasets
+### Secondary Flow: Knowledge Exploration
+
+1. User searches/filters Detail Items → Relevant results displayed
+2. User clicks Detail Item → Modal with full information
+3. User clicks cross-reference → Related Detail Item modal opens
+4. User discovers campaign connections → Enhanced understanding
 
 ## Success Metrics
 
-- **User Engagement**: Daily active users per campaign
-- **Content Creation**: Entities added per session
-- **Feature Adoption**: Usage of AI suggestions
-- **User Satisfaction**: Qualitative feedback on organization improvement
+- **Collaboration**: Average messages per session per user
+- **AI Effectiveness**: Percentage of AI-generated Detail Items accepted/kept
+- **Knowledge Growth**: Detail Items created per session
+- **User Engagement**: Sessions logged per week per campaign
+- **Search Usage**: Searches performed per session
+
+## Technical Challenges & Solutions
+
+### Real-time Collaboration
+
+- **Challenge**: Multiple users editing simultaneously
+- **Solution**: Operational transforms or CRDT for conflict resolution
+
+### AI Processing Speed
+
+- **Challenge**: Long processing times for large sessions
+- **Solution**: Streaming AI responses, progressive Detail Item generation
+
+### Search Performance
+
+- **Challenge**: Fast search across growing knowledge base
+- **Solution**: Hybrid search (keyword + semantic) with caching
+
+### Mobile Experience
+
+- **Challenge**: Split-screen interface on small screens
+- **Solution**: Collapsible panels, tabbed interface for mobile
+
+## Development Phases
+
+### Phase 1: Core SPA Infrastructure
+
+- Split-panel interface
+- Basic session logging (no real-time yet)
+- Static Detail Items display
+- Campaign management
+
+### Phase 2: Real-time Collaboration
+
+- WebSocket integration
+- Live session logging
+- User presence indicators
+- Real-time Detail Items updates
+
+### Phase 3: AI Integration
+
+- LLM API integration
+- Entity extraction logic
+- Detail Item generation and merging
+- Relationship detection
+
+### Phase 4: Advanced Features
+
+- Semantic search
+- AI suggestions and improvements
+- Export capabilities
+- Performance optimizations
+
+## Risk Assessment
+
+- **Technical Risk**: Real-time collaboration complexity
+- **AI Risk**: LLM API costs and rate limiting
+- **UX Risk**: Overwhelming interface with too much information
+- **Performance Risk**: Search speed with large knowledge bases
 
 ## Launch Strategy
 
 1. **Alpha**: Single campaign testing with development team
-2. **Beta**: Limited release to 3-5 D&D groups
-3. **MVP Launch**: Public release with core features
-4. **Post-MVP**: AI enhancements and image generation
-
-## Risk Assessment
-
-- **Technical Risk**: AI API costs and rate limits
-- **User Risk**: Learning curve for new tools
-- **Business Risk**: Competition from established tools
-- **Mitigation**: Start with free tiers, focus on unique AI features
+2. **Beta**: 3-5 D&D groups testing collaborative features
+3. **MVP Launch**: Public release with core session logging and AI features
+4. **Post-MVP**: Advanced search, mobile optimization, integration features

@@ -1,7 +1,7 @@
-import { useLoaderData, Outlet } from "@remix-run/react";
+import { Outlet, useLoaderData } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
-import { Sidebar } from "~/modules/campaigns/components/sidebar";
+import { json } from "@remix-run/node";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabase, user } = await requireAuth(request);
@@ -38,18 +38,24 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   // Check if user is DM
   const isDM = campaign.campaign_users[0]?.role === "dm";
 
-  return { campaign, isDM };
+  return json({
+    campaign,
+    user,
+    isDM,
+    request,
+  });
 }
 
 export default function CampaignLayout() {
-  const { campaign, isDM } = useLoaderData<typeof loader>();
+  const { campaign, user, isDM, request } = useLoaderData<typeof loader>();
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar campaignSlug={campaign.slug} />
-      <main className="flex-1 overflow-y-auto p-6">
-        <Outlet context={{ campaign, isDM }} />
-      </main>
-    </div>
+    <>
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="flex-1 overflow-y-auto p-6">
+          <Outlet context={{ campaign, user, isDM, request }} />
+        </main>
+      </div>
+    </>
   );
 }
