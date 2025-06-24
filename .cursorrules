@@ -109,31 +109,31 @@ ai_processing_jobs (id, session_id, status, result_data, error_message, created_
 
 ```
 SessionPanel/
-├── SessionList.tsx          # List of previous sessions
-├── ActiveSession.tsx        # Live session chat interface
-├── SessionMessage.tsx       # Individual chat message
-├── NewSessionButton.tsx     # Start new session control
-└── TranscribeButton.tsx     # Trigger AI processing
+├── session-list.tsx          # List of previous sessions
+├── active-session.tsx        # Live session chat interface
+├── session-message.tsx       # Individual chat message
+├── new-session-button.tsx    # Start new session control
+└── transcribe-button.tsx     # Trigger AI processing
 ```
 
 ### Right Panel Components
 
 ```
 KnowledgePanel/
-├── SearchAndFilter.tsx      # Search bar and category filters
-├── DetailItemsGrid.tsx      # Tile/grid view of Detail Items
-├── DetailItemCard.tsx       # Individual Detail Item preview
-├── DetailItemModal.tsx      # Full Detail Item information
-└── RelationshipLinks.tsx    # Cross-reference navigation
+├── search-and-filter.tsx     # Search bar and category filters
+├── detail-items-grid.tsx     # Tile/grid view of Detail Items
+├── detail-item-card.tsx      # Individual Detail Item preview
+├── detail-item-modal.tsx     # Full Detail Item information
+└── relationship-links.tsx    # Cross-reference navigation
 ```
 
 ### Shared Components
 
 ```
 Layout/
-├── SplitLayout.tsx          # Main two-panel interface
-├── CampaignHeader.tsx       # Campaign info and navigation
-└── UserPresence.tsx         # Show active users in session
+├── split-layout.tsx          # Main two-panel interface
+├── campaign-header.tsx       # Campaign info and navigation
+└── user-presence.tsx         # Show active users in session
 ```
 
 ## Real-time Architecture
@@ -300,7 +300,7 @@ app/
 
 ### Import Path Conventions
 
-- **Absolute Paths**: Always use absolute paths defined in `tsconfig.json` instead of relative paths or `~/*`
+- **Absolute Paths**: Always use absolute paths defined in `tsconfig.json` such as `@/*` instead of relative paths or `~/*`
 - **Module Imports**: Import from the corresponding module for module-specific types and utilities
 
   ```typescript
@@ -403,3 +403,14 @@ When helping with this project:
 5. **Follow the Detail Items Model**: The unified entity approach replaces separate NPCs, locations, etc.
 
 6. **Test Collaboration**: Features should work smoothly with multiple simultaneous users
+
+7. **Frontend Coding Style**: Try your best to avoid unnecessary and superfluous DOM elements. Use the most semantic elements possible. Always add a `data-testid` to important elements for semantic purposes.
+
+8. **Feedback**: Be brutally honest, don't be a yes man. If I am wrong, point it out bluntly. I need honest feedback on my code.
+
+9. **File Naming Conventions**: Use the following naming conventions for files:
+- **Components**: Use the `component-name.tsx` format.
+- **Hooks**: Use the `use-component-name.ts` format.
+- **Services**: Use the `component-name.service.ts` format.
+- **Utils**: Use the `component-name.utils.ts` format.
+- **Hooks**: Use the `use-component-name.ts` format.

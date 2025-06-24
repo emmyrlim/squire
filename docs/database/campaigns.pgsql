@@ -101,14 +101,29 @@ CREATE POLICY "DMs can delete their campaigns"
     )
   );
 
--- Campaign_users policies - users can view their own memberships
-CREATE POLICY "Users can view their own campaign memberships"
-  ON campaign_users FOR SELECT
-  USING (
-    user_id IN (
-      SELECT id FROM user_profiles WHERE auth_user_id = auth.uid()
-    )
+-- Create a function to check if user is in the same campaign
+CREATE OR REPLACE FUNCTION is_user_in_same_campaign(target_user_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM campaign_users cu1
+    JOIN campaign_users cu2 ON cu1.campaign_id = cu2.campaign_id
+    WHERE cu1.user_id = auth.uid()
+    AND cu2.user_id = target_user_id
   );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Add the new policy using the function
+CREATE POLICY "Users can view campaign memberships"
+ON campaign_users
+FOR SELECT
+USING (
+  user_id = auth.uid()  -- Users can always see their own memberships
+  OR
+  is_user_in_same_campaign(user_id)  -- Or if they're in the same campaign
+);
 
 -- DMs can view all memberships for their campaigns
 CREATE POLICY "DMs can view campaign memberships"

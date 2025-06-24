@@ -1,6 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
 import { Outlet } from "@remix-run/react";
-import { TopBar } from "~/components/TopBar";
 
 export const meta: MetaFunction = () => {
   return [
@@ -14,10 +13,5 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <TopBar />
-      <Outlet />
-    </div>
-  );
+  return <Outlet />;
 }

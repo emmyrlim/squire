@@ -3,8 +3,8 @@ import {
   getSessions,
   createSession,
   subscribeToSessions,
-  type Session,
 } from "../services/sessions";
+import { Session } from "../types";
 import { useEffect } from "react";
 
 export function useSessions(campaignId: string) {

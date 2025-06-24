@@ -13,10 +13,11 @@ interface SessionMessageProps {
 
 export function SessionMessage({
   content,
-  userName,
+  userName = "",
   userAvatar,
   timestamp,
 }: SessionMessageProps) {
+
   return (
     <div className="flex space-x-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50">
       <Avatar className="h-8 w-8">

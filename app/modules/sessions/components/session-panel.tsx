@@ -9,17 +9,28 @@ import { useUser } from "@/shared/hooks/use-user";
 import { useSessionMessages } from "../hooks/use-session-messages";
 import { useSessions } from "../hooks/use-sessions";
 import type { SessionMessage as SessionMessageType } from "../services/session-messages";
+import { UserProfilePanel } from "../../user-profile/components/user-profile-panel";
+import { ScrollArea } from "~/shared/components/ui/scroll-area";
+import { Campaign } from "~/modules/campaigns/types";
+import { Session } from "../types";
+import { useNavigate } from "@remix-run/react";
 
 interface SessionPanelProps {
-  campaignId: string;
+  campaign: Campaign;
+  sessions: Session[];
+  activeSessionId: string;
 }
 
-export function SessionPanel({ campaignId }: SessionPanelProps) {
+export function SessionPanel({
+  campaign,
+  sessions,
+  activeSessionId,
+}: SessionPanelProps) {
   const { user } = useUser();
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
+  const navigate = useNavigate();
 
-  const { sessions, createSession, isCreating } = useSessions(campaignId);
+  const { createSession, isCreating } = useSessions(campaign.id);
   const { data: messages = [] } = useSessionMessages(activeSessionId);
 
   const handleNewSession = async () => {
@@ -28,7 +39,7 @@ export function SessionPanel({ campaignId }: SessionPanelProps) {
     try {
       const newSession = await createSession({ userId: user.id });
       if (newSession) {
-        setActiveSessionId(newSession.id);
+        navigate(`/campaigns/${campaign.slug}/${newSession.slug}`);
       }
     } catch (error) {
       console.error("Error creating session:", error);
@@ -49,7 +60,10 @@ export function SessionPanel({ campaignId }: SessionPanelProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div
+      className="h-screen flex flex-col relative"
+      data-testid="session-panel"
+    >
       {/* Session Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center">
@@ -58,7 +72,7 @@ export function SessionPanel({ campaignId }: SessionPanelProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setActiveSessionId(null)}
+                onClick={() => navigate(`/campaigns/${campaign.slug}`)}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
@@ -88,7 +102,7 @@ export function SessionPanel({ campaignId }: SessionPanelProps) {
       </div>
 
       {/* Session List or Chat */}
-      <div className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1 overflow-y-auto">
         {activeSessionId ? (
           <div className="flex flex-col h-full">
             {/* Messages */}
@@ -97,43 +111,45 @@ export function SessionPanel({ campaignId }: SessionPanelProps) {
                 <SessionMessage
                   key={message.id}
                   content={message.message_content}
-                  userName={message.user.display_name}
+                  userName={message.user.display_name ?? ""}
                   userAvatar={message.user.avatar_url}
                   timestamp={new Date(message.created_at)}
                 />
               ))}
             </div>
-
-            {/* Message Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex space-x-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder="Type your message..."
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || !user}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
           </div>
         ) : (
-          <SessionList
-            sessions={sessions}
-            onSelectSession={setActiveSessionId}
-          />
+          <SessionList sessions={sessions} campaignSlug={campaign.slug} />
         )}
+      </ScrollArea>
+
+      <div className="flex w-full">
+        <UserProfilePanel />
+        {/* Message Input */}
+        {activeSessionId != null ? (
+          <div className="p-4 flex-1 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex space-x-2">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                placeholder="Type your message..."
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim() || !user}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

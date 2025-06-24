@@ -1,19 +1,34 @@
 import { TopBar } from "~/components/TopBar";
+import { ScrollArea } from "~/shared/components/ui/scroll-area";
 
 interface SplitLayoutProps {
   leftPanel: React.ReactNode;
   rightPanel: React.ReactNode;
+  campaignPanel: React.ReactNode;
 }
 
-export function SplitLayout({ leftPanel, rightPanel }: SplitLayoutProps) {
+export function SplitLayout({
+  leftPanel,
+  rightPanel,
+  campaignPanel,
+}: SplitLayoutProps) {
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* Left Panel - Session Logging */}
-      <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+    <div className="h-screen flex bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <ScrollArea
+        data-testid="campaign-panel"
+        className="h-full border-r border-gray-200 dark:border-gray-700 min-h-0"
+      >
+        {campaignPanel}
+      </ScrollArea>
+      <div
+        data-testid="left-panel"
+        className="h-full w-1/2 border-r border-gray-200 dark:border-gray-700 min-h-0"
+      >
         {leftPanel}
       </div>
-      {/* Right Panel - Knowledge Base */}
-      <div className="w-1/2 overflow-y-auto">{rightPanel}</div>
+      <ScrollArea data-testid="right-panel" className="h-full w-1/2 min-h-0">
+        {rightPanel}
+      </ScrollArea>
     </div>
   );
 }

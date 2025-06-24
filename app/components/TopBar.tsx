@@ -1,9 +1,10 @@
 import { Form, Link } from "@remix-run/react";
 import { Settings } from "lucide-react";
+import { cn } from "@/shared/lib/utils";
 
-export function TopBar() {
+export function TopBar({ className }: { className?: string }) {
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow">
+    <nav className={cn("bg-white dark:bg-gray-800 shadow", className)}>
       <div className="flex justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex-shrink-0 flex items-center">
           <Link to="/" className="text-xl font-bold text-primary-600">

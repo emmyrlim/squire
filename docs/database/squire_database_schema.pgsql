@@ -327,7 +327,7 @@ CREATE POLICY "Campaign members can access gold transactions" ON gold_transactio
 );
 
 CREATE POLICY "Campaign members can access quest events" ON quest_events FOR ALL USING (
-    quest_id IN (SELECT id FROM quests WHERE campaign_id IN 
+    quest_id IN (SELECT id FROM quests WHERE campaign_id IN
         (SELECT campaign_id FROM campaign_users WHERE user_id = auth.uid()))
 );
 
@@ -341,7 +341,7 @@ CREATE POLICY "Campaign members can access ai suggestions" ON ai_suggestions FOR
 
 -- Functions for automatic timestamp updates
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS 
+RETURNS TRIGGER AS
 $
 BEGIN
     NEW.updated_at = NOW();
@@ -367,15 +367,15 @@ BEGIN
     INSERT INTO party_gold (campaign_id, total_gold)
     VALUES (NEW.campaign_id, NEW.amount)
     ON CONFLICT (campaign_id)
-    DO UPDATE SET 
+    DO UPDATE SET
         total_gold = party_gold.total_gold + NEW.amount,
         updated_at = NOW();
     RETURN NEW;
 END;
 $ language 'plpgsql';
 
-CREATE TRIGGER update_party_gold_on_transaction 
-    AFTER INSERT ON gold_transactions 
+CREATE TRIGGER update_party_gold_on_transaction
+    AFTER INSERT ON gold_transactions
     FOR EACH ROW EXECUTE FUNCTION update_party_gold();
 
 -- Initial data seeding function (optional)
@@ -383,14 +383,14 @@ CREATE OR REPLACE FUNCTION seed_campaign_data(campaign_uuid UUID)
 RETURNS void AS $
 BEGIN
     -- Initialize party gold at 0
-    INSERT INTO party_gold (campaign_id, total_gold) 
+    INSERT INTO party_gold (campaign_id, total_gold)
     VALUES (campaign_uuid, 0);
 END;
 $ language 'plpgsql';
 
 -- Views for common queries
 CREATE VIEW campaign_summary AS
-SELECT 
+SELECT
     c.id,
     c.name,
     c.description,
@@ -405,7 +405,7 @@ LEFT JOIN sessions s ON c.id = s.campaign_id
 GROUP BY c.id, c.name, c.description, c.setting, c.created_at;
 
 CREATE VIEW active_quests AS
-SELECT 
+SELECT
     q.*,
     l.name as location_name,
     n.name as quest_giver_name
@@ -415,7 +415,7 @@ LEFT JOIN npcs n ON q.quest_giver_npc_id = n.id
 WHERE q.status = 'active';
 
 CREATE VIEW party_inventory_summary AS
-SELECT 
+SELECT
     i.campaign_id,
     i.owner_type,
     i.owner_id,

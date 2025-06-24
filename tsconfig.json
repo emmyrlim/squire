@@ -41,7 +41,8 @@
       "@/quests/*": ["./app/modules/quests/*"],
       "@/bestiary/*": ["./app/modules/bestiary/*"],
       "@/ai/*": ["./app/modules/ai/*"],
-      "@/characters/*": ["./app/modules/characters/*"]
+      "@/characters/*": ["./app/modules/characters/*"],
+      "@/detail-items/*": ["./app/modules/detail-items/*"]
     },
 
     // Vite takes care of building everything, not tsc.

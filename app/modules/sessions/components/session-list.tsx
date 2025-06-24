@@ -1,12 +1,13 @@
 import { format } from "date-fns";
-import type { Session } from "../services/sessions";
+import type { Session } from "../types";
+import { Link } from "@remix-run/react";
 
 interface SessionListProps {
   sessions: Session[];
-  onSelectSession: (sessionId: string) => void;
+  campaignSlug: string;
 }
 
-export function SessionList({ sessions, onSelectSession }: SessionListProps) {
+export function SessionList({ sessions, campaignSlug }: SessionListProps) {
   if (sessions.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
@@ -18,10 +19,11 @@ export function SessionList({ sessions, onSelectSession }: SessionListProps) {
   return (
     <div className="divide-y divide-gray-200 dark:divide-gray-700">
       {sessions.map((session) => (
-        <button
+        <Link
           key={session.id}
-          onClick={() => onSelectSession(session.id)}
-          className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          to={`/campaigns/${campaignSlug}/${session.slug}`}
+          className="w-full block p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          data-testid={`session-link-${session.id}`}
         >
           <div className="flex justify-between items-center">
             <div>
@@ -38,7 +40,7 @@ export function SessionList({ sessions, onSelectSession }: SessionListProps) {
               {format(new Date(session.created_at), "MMM d, yyyy")}
             </div>
           </div>
-        </button>
+        </Link>
       ))}
     </div>
   );

@@ -14,19 +14,17 @@ CREATE INDEX idx_session_messages_created_at ON session_messages(session_id, cre
 
 ALTER TABLE session_messages ENABLE ROW LEVEL SECURITY;
 
--- Policy for reading messages
-CREATE POLICY "Users can read messages from their sessions"
+-- Policy for reading messages and their associated user profiles
+CREATE POLICY "Users can read messages and user profiles from their sessions"
 ON session_messages
 FOR SELECT
 USING (
-  session_id IN (
-    SELECT id
-    FROM sessions
-    WHERE campaign_id IN (
-      SELECT campaign_id
-      FROM campaign_users
-      WHERE user_id = auth.uid()
-    )
+  EXISTS (
+    SELECT 1
+    FROM sessions s
+    JOIN campaign_users cu ON s.campaign_id = cu.campaign_id
+    WHERE s.id = session_messages.session_id
+    AND cu.user_id = auth.uid()
   )
 );
 
@@ -78,3 +76,23 @@ CREATE TABLE sessions (
 CREATE POLICY "Campaign members can access sessions" ON sessions FOR ALL USING (
     campaign_id IN (SELECT campaign_id FROM campaign_users WHERE user_id = auth.uid())
 );
+
+-- Allow all authenticated users to view all user profiles
+CREATE POLICY "Authenticated users can view all profiles"
+ON user_profiles
+FOR SELECT
+USING (auth.uid() IS NOT NULL);
+
+-- Possible more restrictive policy
+-- CREATE POLICY "Users can view profiles of users who share a campaign"
+-- ON user_profiles
+-- FOR SELECT
+-- USING (
+--   EXISTS (
+--     SELECT 1
+--     FROM campaign_users cu1
+--     JOIN campaign_users cu2 ON cu1.campaign_id = cu2.campaign_id
+--     WHERE cu1.user_id = auth.uid()
+--     AND cu2.user_id = user_profiles.id
+--   )
+-- );
