@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "~/shared/components/ui/button";
 import { Input } from "~/shared/components/ui/input";
-import { Plus, ArrowLeft, Send } from "lucide-react";
+import { Plus, ArrowLeft, Send, Mic } from "lucide-react";
 import { SessionList } from "./session-list";
 import { SessionMessage } from "./session-message";
 import { createSessionMessage } from "../services/session-messages";
@@ -13,12 +13,27 @@ import { UserProfilePanel } from "../../user-profile/components/user-profile-pan
 import { ScrollArea } from "~/shared/components/ui/scroll-area";
 import { Campaign } from "~/modules/campaigns/types";
 import { Session } from "../types";
-import { useNavigate } from "@remix-run/react";
+import { useNavigate, useFetcher } from "@remix-run/react";
 
 interface SessionPanelProps {
   campaign: Campaign;
   sessions: Session[];
-  activeSessionId: string;
+  activeSessionId?: string;
+}
+
+type TranscribeResult = {
+  status: string;
+  entities?: unknown[];
+  relationships?: unknown[];
+  [key: string]: unknown;
+};
+
+// Helper to safely stringify fetcher data for debug display
+function safeStringifyFetcherData(data: unknown): string {
+  if (typeof data === "string") return data;
+  if (typeof data === "object" && data !== null)
+    return JSON.stringify(data, null, 2);
+  return String(data);
 }
 
 export function SessionPanel({
@@ -29,9 +44,12 @@ export function SessionPanel({
   const { user } = useUser();
   const [newMessage, setNewMessage] = useState("");
   const navigate = useNavigate();
+  const fetcher = useFetcher<TranscribeResult>();
 
   const { createSession, isCreating } = useSessions(campaign.id);
   const { data: messages = [] } = useSessionMessages(activeSessionId);
+  console.log("activeSessionId", activeSessionId);
+  console.log("messages", messages);
 
   const handleNewSession = async () => {
     if (!user) return;
@@ -47,12 +65,27 @@ export function SessionPanel({
     }
   };
 
+  const handleTranscribe = async () => {
+    if (!activeSessionId) return;
+    fetcher.submit(
+      {
+        sessionId: activeSessionId,
+      },
+      {
+        method: "post",
+        action: `/campaigns/${campaign.id}/transcribe`,
+        encType: "application/json",
+      }
+    );
+  };
+
   const handleSendMessage = async () => {
+    console.log("handleSendMessage", newMessage, activeSessionId, user);
     if (!newMessage.trim() || !activeSessionId || !user) return;
 
     try {
-      await createSessionMessage(activeSessionId, user.id, newMessage.trim());
       setNewMessage("");
+      await createSessionMessage(activeSessionId, user.id, newMessage.trim());
     } catch (error) {
       console.error("Error sending message:", error);
       // TODO: Show error toast
@@ -81,6 +114,19 @@ export function SessionPanel({
                 Session{" "}
                 {sessions.find((s) => s.id === activeSessionId)?.session_number}
               </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleTranscribe}
+                disabled={
+                  fetcher.state === "submitting" || fetcher.state === "loading"
+                }
+              >
+                <Mic className="h-4 w-4 mr-2" />
+                {fetcher.state === "submitting" || fetcher.state === "loading"
+                  ? "Transcribing..."
+                  : "Transcribe"}
+              </Button>
             </div>
           ) : (
             <>
@@ -101,22 +147,26 @@ export function SessionPanel({
         </div>
       </div>
 
+      {/* Optionally, log result or error */}
+      {fetcher.data && (
+        <pre className="p-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded mt-2 overflow-x-auto">
+          {safeStringifyFetcherData(fetcher.data)}
+        </pre>
+      )}
+
       {/* Session List or Chat */}
       <ScrollArea className="flex-1 overflow-y-auto">
         {activeSessionId ? (
-          <div className="flex flex-col h-full">
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto">
-              {messages.map((message: SessionMessageType) => (
-                <SessionMessage
-                  key={message.id}
-                  content={message.message_content}
-                  userName={message.user.display_name ?? ""}
-                  userAvatar={message.user.avatar_url}
-                  timestamp={new Date(message.created_at)}
-                />
-              ))}
-            </div>
+          <div className="h-full overflow-y-auto p-4">
+            {messages.map((message: SessionMessageType) => (
+              <SessionMessage
+                key={message.id}
+                content={message.message_content}
+                userName={message.user.display_name ?? ""}
+                userAvatar={message.user.avatar_url}
+                timestamp={new Date(message.created_at)}
+              />
+            ))}
           </div>
         ) : (
           <SessionList sessions={sessions} campaignSlug={campaign.slug} />

@@ -1,9 +1,9 @@
-import { createClient } from "@/shared/lib/supabase.client";
 import {
   searchService,
   type SearchFilters as EnhancedSearchFilters,
 } from "./search-service";
 import type { DetailItem } from "../types";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export interface DetailItemsFilters {
   search?: string;
@@ -22,9 +22,9 @@ export interface DetailItemsSubscription {
 
 export async function getDetailItems(
   campaignId: string,
+  supabase: SupabaseClient,
   filters: DetailItemsFilters = {}
 ): Promise<DetailItem[]> {
-  const supabase = createClient();
 
   // If there's a search query, use the enhanced search service
   if (
@@ -205,9 +205,9 @@ function calculateRelevanceScore(item: DetailItem, searchTerm: string): number {
 
 export async function getDetailItem(
   campaignId: string,
-  itemId: string
+  itemId: string,
+  supabase: SupabaseClient
 ): Promise<DetailItem | null> {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from("detail_items")
@@ -226,9 +226,9 @@ export async function getDetailItem(
 
 export function subscribeToDetailItems(
   campaignId: string,
-  onUpdate: (detailItem: DetailItem) => void
+  supabase: SupabaseClient,
+  onUpdate: (detailItem: DetailItem) => void,
 ): DetailItemsSubscription {
-  const supabase = createClient();
 
   const subscription = supabase
     .channel(`detail_items:${campaignId}`)
@@ -260,4 +260,33 @@ export function subscribeToDetailItems(
       subscription.unsubscribe();
     },
   };
+}
+
+export function filterDetailItemsByTranscript(
+  detailItems: DetailItem[],
+  transcript: string
+) {
+  const transcriptLower = transcript.toLowerCase();
+  return detailItems.filter((item) => {
+    if (transcriptLower.includes(item.name.toLowerCase())) return true;
+    if (item.metadata?.aliases) {
+      return item.metadata.aliases.some((alias: string) =>
+        transcriptLower.includes(alias.toLowerCase())
+      );
+    }
+    return false;
+  });
+}
+
+// Upsert logic for entities/relationships (simplified)
+export async function updateOrCreateDetailItemsAndRelationships({
+  campaignSlug,
+  entities,
+  relationships,
+  user,
+  supabase,
+}) {
+  // For each entity: if existing_id, update; else, create new
+  // For each relationship: upsert
+  // ...implement as per your schema and business logic
 }

@@ -1,10 +1,13 @@
-import { Outlet, useLoaderData } from "@remix-run/react";
+import { Outlet, useLoaderData, useOutletContext } from "@remix-run/react";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { requireAuth } from "@/shared/utils/auth.server";
 import { CampaignPanel } from "~/modules/campaigns/components/campaign-panel";
-import { SessionPanel } from "~/modules/sessions/components/session-panel";
 import { SplitLayout } from "~/shared/components/split-layout";
 import { KnowledgePanel } from "~/modules/detail-items/components/knowledge-panel";
+import {
+  useCampaignUserProfiles,
+  UserProfileMap,
+} from "~/modules/campaigns/hooks/use-campaign-user-profiles";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { supabase, user } = await requireAuth(request);
@@ -69,6 +72,28 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Error("Failed to fetch sessions");
   }
 
+  // Fetch all campaign users and their profiles
+  const { data: campaignUsers } = await supabase
+    .from("campaign_users")
+    .select("user_id")
+    .eq("campaign_id", campaign.id);
+
+  const userIds = campaignUsers?.map((cu) => cu.user_id) ?? [];
+
+  let userProfileMap = {};
+  if (userIds.length > 0) {
+    const { data: userProfiles } = await supabase
+      .from("user_profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", userIds);
+    if (userProfiles) {
+      userProfileMap = userProfiles.reduce((acc: UserProfileMap, profile) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {});
+    }
+  }
+
   // Check if user is DM
   const isDM = campaign.campaign_users[0]?.role === "dm";
 
@@ -79,12 +104,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     isDM,
     request,
     sessions,
+    userProfiles: userProfileMap,
   });
 }
 
 export default function CampaignLayout() {
-  const { campaign, campaigns, user, isDM, request, sessions } =
+  const { campaign, campaigns, user, isDM, request, sessions, userProfiles } =
     useLoaderData<typeof loader>();
+
+  const { loading, setUserProfiles } = useCampaignUserProfiles();
+  setUserProfiles(userProfiles);
 
   console.log("sessions", sessions);
 
@@ -98,7 +127,20 @@ export default function CampaignLayout() {
           />
         }
         leftPanel={
-          <Outlet context={{ campaign, sessions, user, isDM, request }} />
+          loading ? (
+            <div>Loading...</div>
+          ) : (
+            <Outlet
+              context={{
+                campaign,
+                sessions,
+                user,
+                isDM,
+                request,
+                userProfiles,
+              }}
+            />
+          )
         }
         rightPanel={<KnowledgePanel campaignId={campaign.id} />}
       />

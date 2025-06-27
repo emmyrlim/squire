@@ -183,6 +183,94 @@ For each entity:
 Output: Structured JSON with entities and relationships
 ```
 
+### 5. LLM Output Processing
+
+- LLM returns a JSON object with:
+  - `entities`: Each with category, name, description, metadata, and (if matched) existing ID.
+  - `relationships`: Each with source entity, target entity, type, and description.
+
+#### Code Sketch: Entity Matching and Merging
+
+```typescript
+async function processExtractedEntities(
+  campaignId: string,
+  extractedEntities: ExtractedEntity[]
+) {
+  const existingItems = await getDetailItemsForCampaign(campaignId);
+
+  for (const entity of extractedEntities) {
+    if (entity.existing_id) {
+      // Update existing Detail Item
+      await updateDetailItemWithMergedDescription(
+        existingItems.find((i) => i.id === entity.existing_id),
+        entity
+      );
+    } else {
+      // Create new Detail Item
+      await createDetailItem({
+        ...entity,
+        campaignId,
+        ai_confidence: 0.9,
+      });
+    }
+  }
+}
+```
+
+#### Code Sketch: LLM-Assisted Description Merging
+
+```typescript
+async function mergeDescriptionsWithLLM(
+  oldDescription: string,
+  newDescription: string,
+  entityName: string
+): Promise<string> {
+  const prompt = `
+You are an expert D&D campaign chronicler. The following entity, "${entityName}", has an existing description and a new update from the latest session.
+
+Existing description:
+"""
+${oldDescription}
+"""
+
+New information:
+"""
+${newDescription}
+"""
+
+Please synthesize a single, up-to-date, and accurate description for "${entityName}". If there are contradictions, note them clearly. Be concise but thorough.
+`;
+
+  // Call your LLM API here
+  const mergedDescription = await callLLM(prompt);
+  return mergedDescription;
+}
+```
+
+- **Note:** In most cases, the main transcribe LLM call will already synthesize the merged description. Only use this secondary call if you need to resolve conflicts or further summarize.
+
+### 6. Database Updates
+
+- **Create or update Detail Items** as per LLM output.
+- **Create or update relationships** as per LLM output.
+- **Maintain a history log** of all description changes for auditability.
+
+#### Database Schema Considerations
+
+- Ensure `detail_items` table supports:
+  - Aliases/alternate names (in metadata).
+  - AI confidence score.
+  - History log (could be a separate table or a JSONB array in metadata).
+- Ensure `detail_item_relationships` table supports:
+  - Source/target entity IDs.
+  - Relationship type and description.
+  - AI confidence score.
+
+### 7. Real-Time Feedback
+
+- Use the `ai_processing_jobs` table to track the status of the transcription job (`pending`, `processing`, `completed`, `failed`).
+- Broadcast status and new/updated Detail Items to the frontend via WebSocket events.
+
 ## Security Model
 
 ### Campaign Access Control
@@ -409,6 +497,7 @@ When helping with this project:
 8. **Feedback**: Be brutally honest, don't be a yes man. If I am wrong, point it out bluntly. I need honest feedback on my code.
 
 9. **Naming Conventions**: Use the following naming conventions for components:
+
 - **Components**: Use the `component-name.tsx` format.
 - **Hooks**: Use the `use-component-name.ts` format.
 - **Services**: Use the `component-name.service.ts` format.

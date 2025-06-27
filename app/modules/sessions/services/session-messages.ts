@@ -1,4 +1,6 @@
 import { createClient } from "@/shared/lib/supabase.client";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { UserProfileMap } from "~/modules/campaigns/hooks/use-campaign-user-profiles";
 
 export interface SessionMessage {
   id: string;
@@ -14,10 +16,9 @@ export interface SessionMessage {
 }
 
 export async function getSessionMessages(
-  sessionId: string
+  sessionId: string,
+  supabase: SupabaseClient
 ): Promise<SessionMessage[]> {
-  const supabase = createClient();
-
   console.log("Fetching messages for session:", sessionId);
 
   // First, let's check if we can access the session
@@ -46,21 +47,12 @@ export async function getSessionMessages(
     .eq("session_id", sessionId)
     .order("created_at", { ascending: true });
 
-  console.log("Raw query results:", { data, error });
-
   if (error) {
     console.error("Error fetching session messages:", error);
     throw error;
   }
 
-  // Let's also check if we can access the user profiles directly
-  const userIds = data.map((msg) => msg.user_id);
-  const { data: userData, error: userError } = await supabase
-    .from("user_profiles")
-    .select("id, display_name, avatar_url")
-    .in("id", userIds);
-
-  console.log("User profiles data:", { userData, userError });
+  console.log("Raw query results:", { data, error });
 
   return data as SessionMessage[];
 }
@@ -99,18 +91,27 @@ export async function createSessionMessage(
 
 export function subscribeToSessionMessages(
   sessionId: string,
+  supabase: SupabaseClient,
+  userProfiles: UserProfileMap,
   onMessage: (message: SessionMessage) => void
 ) {
-  console.log("Setting up real-time subscription for session:", sessionId);
-  const supabase = createClient();
+  let lastProcessedMessageId: string | null = null;
 
-  // First, let's verify the client is properly initialized
-  console.log("Supabase client initialized:", !!supabase);
+  const handleNewMessage = async (message: SessionMessage) => {
+    if (message.id === lastProcessedMessageId) {
+      // Already processed this message
+      return;
+    }
+    lastProcessedMessageId = message.id;
+    // Fetch user profile and merge
+    const user = userProfiles[message.user_id];
+    onMessage({ ...message, user });
+  };
 
   const channel = supabase
     .channel(`session:${sessionId}`, {
       config: {
-        broadcast: { self: true }, // Enable receiving our own messages
+        broadcast: { self: true },
       },
     })
     .on(
@@ -122,67 +123,37 @@ export function subscribeToSessionMessages(
         filter: `session_id=eq.${sessionId}`,
       },
       async (payload) => {
-        console.log("Received real-time message payload:", payload);
         try {
-          // Fetch the full message with user data
-          const messages = await getSessionMessages(sessionId);
-          console.log("Fetched messages:", messages);
-          const message = messages.find((m) => m.id === payload.new.id);
-          if (message) {
-            console.log("Found matching message:", message);
-            onMessage(message);
-          } else {
-            console.warn("Message not found in fetched messages");
-          }
+          console.log("Received real-time message payload:", payload);
+          await handleNewMessage(payload.new as SessionMessage);
         } catch (error) {
           console.error("Error processing real-time message:", error);
         }
       }
     )
-    .subscribe((status) => {
-      console.log("Subscription status:", status);
-      if (status === "SUBSCRIBED") {
-        console.log("Successfully subscribed to real-time updates");
-      } else if (status === "CLOSED") {
-        console.log("Subscription closed");
-      } else if (status === "CHANNEL_ERROR") {
-        console.error("Channel error occurred");
-      }
-    });
+    .subscribe();
 
-  // Add a fallback polling mechanism for development
+  // Polling fallback (development only)
   if (process.env.NODE_ENV === "development") {
-    let lastMessageId: string | null = null;
+    let lastPolledMessageId: string | null = null;
 
     const pollMessages = async () => {
       try {
-        const messages = await getSessionMessages(sessionId);
+        const messages = await getSessionMessages(sessionId, supabase);
         const lastMessage = messages[messages.length - 1];
-
-        if (lastMessage) {
-          // If this is the first poll, just set the ID without sending
-          if (lastMessageId === null) {
-            lastMessageId = lastMessage.id;
-            console.log("Initialized lastMessageId with:", lastMessageId);
-          }
-          // Only send the message if it's new
-          else if (lastMessage.id !== lastMessageId) {
-            console.log("Polling found new message:", lastMessage.id);
-            lastMessageId = lastMessage.id;
-            onMessage(lastMessage);
-          }
+        if (lastMessage && lastMessage.id !== lastPolledMessageId) {
+          lastPolledMessageId = lastMessage.id;
+          await handleNewMessage(lastMessage);
+          console.log("Polled message:", lastMessage);
         }
       } catch (error) {
         console.error("Error in polling:", error);
       }
     };
 
-    // Initial poll
     pollMessages();
-
     const pollInterval = setInterval(pollMessages, 5000);
 
-    // Clean up the polling when the component unmounts
     return {
       ...channel,
       unsubscribe: () => {

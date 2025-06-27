@@ -6,12 +6,15 @@ import { DetailItemsGrid } from "./detail-items-grid";
 import { DetailItemModal } from "./detail-item-modal";
 import { SearchAdvancedToggle } from "./search-advanced-toggle";
 import type { DetailItem } from "../types";
+import { useDebounce } from "~/shared/hooks/use-debounce";
+import { DetailItemsFilters } from "../services/detail-items-api";
 
 interface KnowledgePanelProps {
   campaignId: string;
 }
 
 export function KnowledgePanel({ campaignId }: KnowledgePanelProps) {
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState<DetailItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -45,17 +48,23 @@ export function KnowledgePanel({ campaignId }: KnowledgePanelProps) {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
-    updateFilters({
-      search: searchTerm,
-      searchType,
-      similarityThreshold,
-    });
+    setSearchTerm(searchTerm);
 
     // Auto-sort by relevance when searching
     if (searchTerm.trim()) {
-      updateFilters({ sort: "relevance" });
+      updateFilters({
+        sort: "relevance",
+        search: searchTerm,
+        searchType,
+        similarityThreshold,
+      });
     } else {
-      updateFilters({ sort: "created_at" });
+      updateFilters({
+        sort: "created_at",
+        search: searchTerm,
+        searchType,
+        similarityThreshold,
+      });
     }
   };
 
@@ -129,7 +138,7 @@ export function KnowledgePanel({ campaignId }: KnowledgePanelProps) {
               type="search"
               placeholder="Search knowledge base..."
               className="pl-10"
-              value={filters.search}
+              value={searchTerm}
               onChange={handleSearchChange}
             />
           </div>

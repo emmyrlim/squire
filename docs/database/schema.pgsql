@@ -33,8 +33,8 @@ CREATE TABLE public.campaign_characters (
   joined_at timestamp with time zone DEFAULT now(),
   is_active boolean DEFAULT true,
   CONSTRAINT campaign_characters_pkey PRIMARY KEY (id),
-  CONSTRAINT campaign_characters_character_id_fkey FOREIGN KEY (character_id) REFERENCES public.characters(id),
-  CONSTRAINT campaign_characters_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT campaign_characters_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
+  CONSTRAINT campaign_characters_character_id_fkey FOREIGN KEY (character_id) REFERENCES public.characters(id)
 );
 CREATE TABLE public.campaign_users (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -45,8 +45,8 @@ CREATE TABLE public.campaign_users (
   character_description text,
   joined_at timestamp with time zone DEFAULT now(),
   CONSTRAINT campaign_users_pkey PRIMARY KEY (id),
-  CONSTRAINT campaign_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id),
-  CONSTRAINT campaign_users_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT campaign_users_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
+  CONSTRAINT campaign_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.campaigns (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -88,10 +88,10 @@ CREATE TABLE public.detail_item_relationships (
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT detail_item_relationships_pkey PRIMARY KEY (id),
-  CONSTRAINT detail_item_relationships_source_item_id_fkey FOREIGN KEY (source_item_id) REFERENCES public.detail_items(id),
-  CONSTRAINT detail_item_relationships_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
   CONSTRAINT detail_item_relationships_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
-  CONSTRAINT detail_item_relationships_target_item_id_fkey FOREIGN KEY (target_item_id) REFERENCES public.detail_items(id)
+  CONSTRAINT detail_item_relationships_source_item_id_fkey FOREIGN KEY (source_item_id) REFERENCES public.detail_items(id),
+  CONSTRAINT detail_item_relationships_target_item_id_fkey FOREIGN KEY (target_item_id) REFERENCES public.detail_items(id),
+  CONSTRAINT detail_item_relationships_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.detail_items (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -136,9 +136,9 @@ CREATE TABLE public.gold_transactions (
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT gold_transactions_pkey PRIMARY KEY (id),
-  CONSTRAINT gold_transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
+  CONSTRAINT gold_transactions_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
   CONSTRAINT gold_transactions_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id),
-  CONSTRAINT gold_transactions_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT gold_transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.item_transactions (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -153,12 +153,12 @@ CREATE TABLE public.item_transactions (
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT item_transactions_pkey PRIMARY KEY (id),
-  CONSTRAINT item_transactions_from_user_id_fkey FOREIGN KEY (from_user_id) REFERENCES public.user_profiles(id),
-  CONSTRAINT item_transactions_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id),
   CONSTRAINT item_transactions_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
-  CONSTRAINT item_transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
+  CONSTRAINT item_transactions_item_id_fkey FOREIGN KEY (item_id) REFERENCES public.items(id),
+  CONSTRAINT item_transactions_from_user_id_fkey FOREIGN KEY (from_user_id) REFERENCES public.user_profiles(id),
+  CONSTRAINT item_transactions_to_user_id_fkey FOREIGN KEY (to_user_id) REFERENCES public.user_profiles(id),
   CONSTRAINT item_transactions_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id),
-  CONSTRAINT item_transactions_to_user_id_fkey FOREIGN KEY (to_user_id) REFERENCES public.user_profiles(id)
+  CONSTRAINT item_transactions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.items (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -179,9 +179,9 @@ CREATE TABLE public.items (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT items_pkey PRIMARY KEY (id),
   CONSTRAINT items_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
-  CONSTRAINT items_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
+  CONSTRAINT items_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.user_profiles(id),
   CONSTRAINT items_acquired_in_session_id_fkey FOREIGN KEY (acquired_in_session_id) REFERENCES public.sessions(id),
-  CONSTRAINT items_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.user_profiles(id)
+  CONSTRAINT items_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.locations (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -196,10 +196,10 @@ CREATE TABLE public.locations (
   updated_at timestamp with time zone DEFAULT now(),
   slug character varying,
   CONSTRAINT locations_pkey PRIMARY KEY (id),
-  CONSTRAINT locations_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
-  CONSTRAINT locations_discovered_in_session_id_fkey FOREIGN KEY (discovered_in_session_id) REFERENCES public.sessions(id),
+  CONSTRAINT locations_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
   CONSTRAINT locations_parent_location_id_fkey FOREIGN KEY (parent_location_id) REFERENCES public.locations(id),
-  CONSTRAINT locations_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT locations_discovered_in_session_id_fkey FOREIGN KEY (discovered_in_session_id) REFERENCES public.sessions(id),
+  CONSTRAINT locations_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.monsters (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -221,10 +221,10 @@ CREATE TABLE public.monsters (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT monsters_pkey PRIMARY KEY (id),
-  CONSTRAINT monsters_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
-  CONSTRAINT monsters_location_encountered_id_fkey FOREIGN KEY (location_encountered_id) REFERENCES public.locations(id),
+  CONSTRAINT monsters_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
   CONSTRAINT monsters_encountered_in_session_id_fkey FOREIGN KEY (encountered_in_session_id) REFERENCES public.sessions(id),
-  CONSTRAINT monsters_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT monsters_location_encountered_id_fkey FOREIGN KEY (location_encountered_id) REFERENCES public.locations(id),
+  CONSTRAINT monsters_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.npc_affiliations (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -253,9 +253,9 @@ CREATE TABLE public.npcs (
   updated_at timestamp with time zone DEFAULT now(),
   slug character varying,
   CONSTRAINT npcs_pkey PRIMARY KEY (id),
-  CONSTRAINT npcs_met_in_session_id_fkey FOREIGN KEY (met_in_session_id) REFERENCES public.sessions(id),
   CONSTRAINT npcs_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
   CONSTRAINT npcs_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id),
+  CONSTRAINT npcs_met_in_session_id_fkey FOREIGN KEY (met_in_session_id) REFERENCES public.sessions(id),
   CONSTRAINT npcs_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.party_gold (
@@ -275,9 +275,9 @@ CREATE TABLE public.quest_events (
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT quest_events_pkey PRIMARY KEY (id),
-  CONSTRAINT quest_events_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id),
   CONSTRAINT quest_events_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
-  CONSTRAINT quest_events_quest_id_fkey FOREIGN KEY (quest_id) REFERENCES public.quests(id)
+  CONSTRAINT quest_events_quest_id_fkey FOREIGN KEY (quest_id) REFERENCES public.quests(id),
+  CONSTRAINT quest_events_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id)
 );
 CREATE TABLE public.quests (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -298,12 +298,12 @@ CREATE TABLE public.quests (
   updated_at timestamp with time zone DEFAULT now(),
   slug character varying,
   CONSTRAINT quests_pkey PRIMARY KEY (id),
-  CONSTRAINT quests_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
-  CONSTRAINT quests_completed_in_session_id_fkey FOREIGN KEY (completed_in_session_id) REFERENCES public.sessions(id),
+  CONSTRAINT quests_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
+  CONSTRAINT quests_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id),
   CONSTRAINT quests_quest_giver_npc_id_fkey FOREIGN KEY (quest_giver_npc_id) REFERENCES public.npcs(id),
   CONSTRAINT quests_started_in_session_id_fkey FOREIGN KEY (started_in_session_id) REFERENCES public.sessions(id),
-  CONSTRAINT quests_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id),
-  CONSTRAINT quests_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT quests_completed_in_session_id_fkey FOREIGN KEY (completed_in_session_id) REFERENCES public.sessions(id),
+  CONSTRAINT quests_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.session_messages (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -314,8 +314,8 @@ CREATE TABLE public.session_messages (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT session_messages_pkey PRIMARY KEY (id),
-  CONSTRAINT session_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id),
-  CONSTRAINT session_messages_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id)
+  CONSTRAINT session_messages_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id),
+  CONSTRAINT session_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.sessions (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -328,13 +328,13 @@ CREATE TABLE public.sessions (
   created_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  slug character varying,
+  slug character varying NOT NULL,
   status character varying DEFAULT 'completed'::character varying CHECK (status::text = ANY (ARRAY['active'::character varying, 'completed'::character varying, 'processing'::character varying]::text[])),
   participant_count integer DEFAULT 0,
   last_activity_at timestamp with time zone DEFAULT now(),
   CONSTRAINT sessions_pkey PRIMARY KEY (id),
-  CONSTRAINT sessions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id),
-  CONSTRAINT sessions_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id)
+  CONSTRAINT sessions_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
+  CONSTRAINT sessions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.user_profiles(id)
 );
 CREATE TABLE public.user_profiles (
   id uuid NOT NULL,
